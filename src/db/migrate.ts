@@ -13,6 +13,18 @@ import { requireConnection } from "./index";
  * Run: npm run db:migrate
  */
 async function main() {
+  const url =
+    process.env.POSTGRES_URL_NON_POOLING ??
+    process.env.POSTGRES_URL ??
+    process.env.DATABASE_URL;
+
+  if (!url) {
+    console.warn(
+      "⚠️  Skipping database migrations: No database connection string set (POSTGRES_URL or DATABASE_URL). Add it to your Vercel Project Settings or connect Vercel Postgres / Neon.",
+    );
+    return;
+  }
+
   const sql = await requireConnection();
   const db = drizzle(sql);
   console.log("Applying migrations from ./drizzle …");
