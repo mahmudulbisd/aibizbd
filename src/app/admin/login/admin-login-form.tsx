@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, KeyRound, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { KeyRound, ShieldAlert, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export function AdminLoginForm() {
   const [password, setPassword] = useState("");
@@ -33,7 +37,7 @@ export function AdminLoginForm() {
       setTimeout(() => {
         router.push("/admin");
         router.refresh();
-      }, 500);
+      }, 400);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Authentication error");
     } finally {
@@ -43,55 +47,49 @@ export function AdminLoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wider text-[#9aa3b6]">
-          Admin Secret Key or Password
-        </label>
+      <Field label="Admin secret key or password">
         <div className="relative">
-          <input
+          <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
+          <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoFocus
             placeholder="••••••••••••••••"
-            className="w-full rounded-xl border border-white/10 bg-[#0d121f]/90 px-4 py-3 pl-11 text-sm text-white placeholder-white/20 outline-none transition focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20"
+            className="pl-10"
           />
-          <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-cyan-400" />
         </div>
-      </div>
+      </Field>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-400">
-          <ShieldAlert className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </div>
+        <Alert tone="danger" icon={<ShieldAlert className="h-4 w-4" />}>
+          {error}
+        </Alert>
       )}
 
       {success && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-400">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Authenticated! Redirecting to command center…</span>
-        </div>
+        <Alert tone="success" icon={<CheckCircle2 className="h-4 w-4" />}>
+          Authenticated! Redirecting…
+        </Alert>
       )}
 
-      <button
+      <Button
         type="submit"
-        disabled={loading || success || !password}
-        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50"
+        variant="primary"
+        className="w-full"
+        disabled={!password}
+        loading={loading}
       >
-        {loading ? (
+        {!loading && !success && (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Verifying…</span>
-          </>
-        ) : (
-          <>
-            <span>Enter Admin Portal</span>
-            <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+            Enter Admin Portal
+            <ArrowRight className="h-4 w-4" />
           </>
         )}
-      </button>
+        {loading && "Verifying…"}
+        {success && "Welcome back"}
+      </Button>
     </form>
   );
 }

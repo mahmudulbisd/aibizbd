@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Terminal, Zap, Shield, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
 import { CommandCard } from "./command-card";
 
 export const metadata: Metadata = {
-  title: "Command Center & Instructions — Ai Biz BD Admin",
-  description: "Developer cheatsheet, database migrations, security keys generator and API test commands.",
+  title: "Command Center — Ai Biz BD Admin",
+  description: "Developer cheatsheet, database migrations, security keys and API test commands.",
 };
 
 export const dynamic = "force-dynamic";
@@ -16,23 +18,13 @@ export default async function AdminCommandsPage() {
 
   return (
     <AdminShell activeTab="commands">
-      <div className="mb-8">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
-            <Zap className="h-3 w-3" /> Terminal Cheatsheet
-          </span>
-        </div>
-        <h1 className="font-display mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Command Code & <span className="text-gradient">Instructions Center</span>
-        </h1>
-        <p className="mt-1 text-xs text-[#8b93a7]">
-          কমান্ড কোড এবং অপারেশনাল নির্দেশনাবলী — এক ক্লিকেই কমান্ড কপি করে টার্মিনালে রান করতে পারবেন।
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Runbook"
+        title="Command Center"
+        description="কমান্ড কোড এবং অপারেশনাল নির্দেশনাবলী — এক ক্লিকেই কমান্ড কপি করে টার্মিনালে রান করতে পারবেন।"
+      />
 
-      {/* Commands Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* 1. Database Migration */}
+      <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <CommandCard
           title="Apply Database Schema (Migration)"
           category="DATABASE"
@@ -43,7 +35,6 @@ export default async function AdminCommandsPage() {
           outputHint="Migrations applied. (Exits with code 0)"
         />
 
-        {/* 2. Seed Catalog */}
         <CommandCard
           title="Seed Product Catalog into Database"
           category="DATABASE"
@@ -54,7 +45,6 @@ export default async function AdminCommandsPage() {
           outputHint="Seeded 12 products. Done."
         />
 
-        {/* 3. Generate AES-256 Encryption Key */}
         <CommandCard
           title="Generate Master 32-Byte Encryption Key"
           category="SECURITY"
@@ -65,7 +55,6 @@ export default async function AdminCommandsPage() {
           outputHint="44-character base64 string (e.g. kP8...=)"
         />
 
-        {/* 4. Generate Auth Secret */}
         <CommandCard
           title="Generate JWT / Session Auth Secret"
           category="SECURITY"
@@ -76,7 +65,6 @@ export default async function AdminCommandsPage() {
           outputHint="43-character URL-safe string"
         />
 
-        {/* 5. End-to-End System Test */}
         <CommandCard
           title="Run Full End-to-End Checkout Test Flow"
           category="TESTING"
@@ -87,7 +75,6 @@ export default async function AdminCommandsPage() {
           outputHint="All flow checks passed! (Mock gateway & fulfillment)"
         />
 
-        {/* 6. ProdSeller Balance Check */}
         <CommandCard
           title="ProdSeller Supplier Balance & Stock Check"
           category="SUPPLIER"
@@ -98,45 +85,43 @@ export default async function AdminCommandsPage() {
           outputHint='{"status":"success","balance":"..."}'
         />
 
-        {/* 7. Setup Vercel Admin Password via CLI */}
         <CommandCard
           title="Set Custom Admin Password in Vercel"
           category="VERCEL"
           badgeColor="purple"
           description="Sets a custom password for your /admin portal directly in your production Vercel environment."
-          banglaInstruction="এডমিন ড্যাশবোর্ডের নিজস্ব গোপন পাসওয়ার্ড Vercel-এ যুক্ত করার কমান্ড।"
+          banglaInstruction="এডমিন ড্যাশবোর্ডের নিজস্ব গোপন পাসওয়ার্ড Vercel-এ যুক্ত করার কমান্ড।"
           command={`npx vercel env add ADMIN_PASSWORD production`}
           outputHint="Enter value -> Password set successfully"
         />
 
-        {/* 8. Setup Telegram Alert Bot */}
         <CommandCard
           title="Test Telegram Admin Alert Bot"
           category="SECURITY"
           badgeColor="cyan"
           description="Sends a test ping to your Telegram channel or personal chat to verify order alert delivery."
-          banglaInstruction="অর্ডার নোটিফিকেশন পাওয়ার জন্য টেলিগ্রাম বট টেস্ট করার কার্ল কমান্ড।"
+          banglaInstruction="অর্ডার নোটিফিকেশন পাওয়ার জন্য টেলিগ্রাম বট টেস্ট করার কার্ল কমান্ড।"
           command={`curl -s -X POST "https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage" -d "chat_id=YOUR_CHAT_ID&text=Ai+Biz+BD+Alert+Test"`}
           outputHint='{"ok":true,"result":{...}}'
         />
       </div>
 
       {/* Documentation Footer */}
-      <div className="mt-10 rounded-2xl border border-white/10 bg-[#070b14]/70 p-6">
+      <Card className="mt-8 p-6">
         <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <HelpCircle className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-white">
+            <h4 className="text-sm font-bold text-ink">
               কিভাবে নতুন এনভায়রনমেন্ট কি (Environment Variable) যুক্ত করবেন?
             </h4>
-            <p className="mt-1 text-xs text-[#8b93a7]">
-              Vercel ড্যাশবোর্ডে গিয়ে আপনার প্রজেক্টের <strong>Settings → Environment Variables</strong>-এ যান। সেখানে কি-নাম (যেমন: <code>ADMIN_PASSWORD</code>, <code>ENCRYPTION_KEY</code>) এবং ভ্যালু বসিয়ে <strong>Save</strong> করুন। এরপর একবার <strong>Redeploy</strong> করলেই নতুন কি কার্যকর হয়ে যাবে।
+            <p className="mt-1 text-xs leading-relaxed text-subtle">
+              Vercel ড্যাশবোর্ডে গিয়ে আপনার প্রজেক্টের <strong className="text-ink">Settings → Environment Variables</strong>-এ যান। সেখানে কি-নাম (যেমন: <code className="rounded border border-line bg-panel-strong px-1 font-mono text-accent">ADMIN_PASSWORD</code>, <code className="rounded border border-line bg-panel-strong px-1 font-mono text-accent">ENCRYPTION_KEY</code>) এবং ভ্যালু বসিয়ে <strong className="text-ink">Save</strong> করুন। এরপর একবার <strong className="text-ink">Redeploy</strong> করলেই নতুন কি কার্যকর হয়ে যাবে।
             </p>
           </div>
         </div>
-      </div>
+      </Card>
     </AdminShell>
   );
 }

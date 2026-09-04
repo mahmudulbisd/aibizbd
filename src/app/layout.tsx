@@ -2,11 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/site";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { CartProvider } from "@/components/cart-context";
-import { AuthProvider } from "@/components/auth-context";
-import { CartHost } from "@/components/cart-host";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -58,17 +53,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="bg-cyber min-h-full">
-        <div className="pointer-events-none fixed inset-0 bg-grid" aria-hidden />
-        <CartProvider>
-          <AuthProvider>
-            <Navbar />
-            <main className="relative z-10">{children}</main>
-            <Footer />
-            <CartHost />
-          </AuthProvider>
-        </CartProvider>
-      </body>
+      <body className="bg-cyber min-h-full">{children}</body>
     </html>
   );
 }

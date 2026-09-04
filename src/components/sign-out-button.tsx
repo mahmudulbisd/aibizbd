@@ -2,22 +2,24 @@
 
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth-context";
+import { Button } from "@/components/ui/button";
 
-export function SignOutButton() {
-  const { signOut } = useAuth();
+export function SignOutButton({ className = "" }: { className?: string }) {
   const router = useRouter();
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
+      className={className}
       onClick={async () => {
-        await signOut();
+        await fetch("/api/auth/logout", { method: "POST" });
         router.push("/");
+        router.refresh();
       }}
-      className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2 text-sm font-semibold text-[#aab3c5] transition hover:border-rose-500/40 hover:text-rose-300"
     >
-      <LogOut size={15} /> Sign out
-    </button>
+      <LogOut className="h-3.5 w-3.5" />
+      Sign out
+    </Button>
   );
 }

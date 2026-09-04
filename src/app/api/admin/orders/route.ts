@@ -3,7 +3,30 @@ import { eq } from "drizzle-orm";
 import { db, dbHealthy } from "@/db";
 import { orders } from "@/db/schema";
 import { isAdminAuthenticated } from "@/lib/admin";
+import { adminGuard } from "@/lib/api-auth";
 import { encryptSecret } from "@/lib/crypto";
+import { listAdminOrders } from "@/lib/queries/admin-orders";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
+  const guard = await adminGuard();
+  if (guard) return guard;
+
+  const url = new URL(req.url);
+  const search = url.searchParams.get("search") ?? undefined;
+  const status = url.searchParams.get("status") ?? undefined;
+  const page = Number(url.searchParams.get("page") ?? "1");
+  const pageSize = Number(url.searchParams.get("pageSize") ?? "50");
+
+  const result = await listAdminOrders({
+    search,
+    status: (status as "ALL") ?? undefined,
+    page: Number.isFinite(page) ? page : 1,
+    pageSize: Number.isFinite(pageSize) ? pageSize : 50,
+  });
+  return NextResponse.json(result);
+}
 
 export async function PATCH(req: Request) {
   const authed = await isAdminAuthenticated();

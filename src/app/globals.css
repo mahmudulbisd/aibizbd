@@ -20,6 +20,16 @@
   --font-sans: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Console / dashboard tokens (refined dark SaaS) */
+  --color-ink: #e8ecf4;
+  --color-subtle: #98a1b3;
+  --color-faint: #5b6377;
+  --color-panel: #0c1019;
+  --color-panel-strong: #10151f;
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-strong: rgba(255, 255, 255, 0.13);
+  --color-accent: #22d3ee;
 }
 
 html {
@@ -127,6 +137,14 @@ body {
 }
 
 /* ---- Scroll reveal (server-safe) ---- */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(18px);
