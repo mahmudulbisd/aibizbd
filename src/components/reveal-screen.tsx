@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Loader2, Mail, MessageCircle, XCircle } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 import { CopyButton } from "@/components/copy-button";
+import { useI18n } from "@/components/locale-provider";
 
 type Delivery = { type: string; data: string; instructions?: string[] };
 
@@ -49,14 +50,15 @@ export function RevealScreen({
   initialOrderNumber: string;
   lookupSecret: string | null;
 }) {
+  const { dict } = useI18n();
   const [status, setStatus] = useState<string>("PENDING");
   const [productTitle, setProductTitle] = useState<string | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [phase, setPhase] = useState<"connect" | "processing" | "delivered" | "failed">("connect");
   const [error, setError] = useState<string | null>(null);
   const logLines = useRef<string[]>([
-    "Establishing secure uplink…",
-    "Handshake with payment network…",
+    dict.order.logConnect,
+    dict.order.logHandshake,
   ]);
 
   const poll = useCallback(async () => {
@@ -105,6 +107,8 @@ export function RevealScreen({
   }, []);
 
   // Poll until DELIVERED / FAILED.
+  const errorNotFound = dict.order.notFound;
+  const errorFulfillment = dict.order.fulfillmentFailed;
   useEffect(() => {
     let cancelled = false;
     async function tick() {
@@ -113,7 +117,7 @@ export function RevealScreen({
         if (cancelled) return;
         if (!data) {
           setPhase("failed");
-          setError("Order not found. Check your order number.");
+          setError(errorNotFound);
           return;
         }
         if (data.status === "DELIVERED" && data.delivery) {
@@ -127,7 +131,7 @@ export function RevealScreen({
         }
         if (data.status === "FAILED") {
           setPhase("failed");
-          setError(data.failureReason ?? "Fulfillment failed.");
+          setError(data.failureReason ?? errorFulfillment);
           return;
         }
         // Still pending/processing — poll again.
@@ -140,7 +144,7 @@ export function RevealScreen({
     return () => {
       cancelled = true;
     };
-  }, [poll]);
+  }, [poll, errorNotFound, errorFulfillment]);
 
   const delivered = phase === "delivered" && delivery;
 
@@ -153,7 +157,7 @@ export function RevealScreen({
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
           <span className="ml-2 font-mono text-xs text-[#5b6377]">
-            aibizbd · secure-delivery-node
+            {dict.order.terminalTitle}
           </span>
         </div>
         <div id="term" className="min-h-[150px] space-y-1.5 px-5 py-4" />
@@ -163,8 +167,8 @@ export function RevealScreen({
             <div className="flex items-center gap-2 text-sm text-cyan-300">
               <Loader2 size={15} className="animate-spin" />
               {status === "PAID" || status === "PROCESSING"
-                ? "Accessing satellite nodes — fetching your key from the supplier network…"
-                : "Verifying payment with the gateway…"}
+                ? dict.order.processing1
+                : dict.order.processing2}
             </div>
           </div>
         )}
@@ -175,20 +179,17 @@ export function RevealScreen({
         <div className="mt-6">
           <div className="flex items-center gap-2 text-emerald-400">
             <CheckCircle2 size={18} />
-            <span className="font-semibold">Unlocked & delivered</span>
+            <span className="font-semibold">{dict.order.delivered}</span>
           </div>
           <p className="mt-1 text-sm text-[#8b93a7]">{productTitle}</p>
 
           <div className="mt-5 rounded-2xl border border-cyan-500/25 bg-cyan-500/[0.05] p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b93a7]">
-                {delivery.type === "LINK"
-                  ? "Your invite link"
-                  : delivery.type === "ACTIVATION_KEY"
-                    ? "Activation key"
-                    : "Credentials"}
+                {dict.order.deliveryTypeLabel[delivery.type as keyof typeof dict.order.deliveryTypeLabel] ??
+                  dict.common.digitalDelivery}
               </p>
-              <CopyButton text={delivery.data} label="Copy" />
+              <CopyButton text={delivery.data} label={dict.common.copy} />
             </div>
             <p
               id="credential"
@@ -211,14 +212,14 @@ export function RevealScreen({
 
           <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <p className="text-sm text-[#8b93a7]">
-              We also emailed this to your inbox. Lost it later?{" "}
+              {dict.order.supportLost}{" "}
               <a
                 href={siteConfig.whatsappLink}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 font-semibold text-cyan-300 hover:underline"
               >
-                <MessageCircle size={13} /> WhatsApp support
+                <MessageCircle size={13} /> {dict.order.whatsappSupport}
               </a>
             </p>
           </div>
@@ -229,10 +230,9 @@ export function RevealScreen({
       {phase === "failed" && (
         <div className="glass-card mt-6 rounded-2xl p-6 text-center">
           <XCircle className="mx-auto text-rose-400" size={28} />
-          <h2 className="font-display mt-3 text-lg font-bold">Not delivered yet</h2>
+          <h2 className="font-display mt-3 text-lg font-bold">{dict.order.notDelivered}</h2>
           <p className="mt-2 text-sm text-[#8b93a7]">
-            {error ??
-              "We hit a snag fulfilling this order. Our team has been alerted and will resolve it shortly — or message us for instant help."}
+            {error ?? dict.order.failureNote}
           </p>
           <a
             href={siteConfig.whatsappLink}
@@ -240,7 +240,7 @@ export function RevealScreen({
             rel="noreferrer"
             className="btn-neon mx-auto mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white"
           >
-            <MessageCircle size={15} /> Contact support on WhatsApp
+            <MessageCircle size={15} /> {dict.order.contactWhatsapp}
           </a>
         </div>
       )}
@@ -248,7 +248,7 @@ export function RevealScreen({
       {/* Initial pending hint */}
       {phase === "connect" && (
         <p className="mt-4 flex items-center justify-center gap-2 text-xs text-[#5b6377]">
-          <Mail size={12} /> Waiting for payment confirmation — keep this tab open.
+          <Mail size={12} /> {dict.order.pendingHint}
         </p>
       )}
     </div>

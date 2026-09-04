@@ -15,7 +15,8 @@ import {
   Package,
 } from "lucide-react";
 import type { AdminAnalyticsDTO, AnalyticsRange } from "@/lib/dto";
-import { formatBDT } from "@/lib/site";
+import { formatMoney } from "@/lib/format";
+import { useI18n } from "@/components/locale-provider";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO }) {
+  const { dict } = useI18n();
   const [range, setRange] = useState<AnalyticsRange>(initialData.range);
   const [data, setData] = useState<AdminAnalyticsDTO>(initialData);
   const [loading, setLoading] = useState(false);
@@ -72,9 +74,10 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
   const changeRange = useCallback((r: string) => setRange(r as AnalyticsRange), []);
   const { kpis, series, statusSplit, topProducts, paymentSplit, recentOrders } = data;
   const totalOrdersInWindow = kpis.orders;
+  const bdt = (v: number) => formatMoney(v, "BDT");
 
   const donutSegments = statusSplit.map((s) => ({
-    label: s.status,
+    label: dict.status[s.status as keyof typeof dict.status] ?? s.status,
     value: s.count,
     color: STATUS_COLORS[s.status] ?? "#5b6377",
   }));
@@ -85,22 +88,22 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
         <Alert
           tone="warning"
           icon={<Database className="h-4 w-4" />}
-          title="Database connecting"
+          title={dict.admin.dbConnecting}
           action={
             <Button href="/admin/commands" size="sm" variant="secondary">
               <Terminal className="h-3.5 w-3.5" />
-              Migration Guide
+              {dict.admin.migrationGuide}
             </Button>
           }
         >
-          Orders and analytics will appear here once your Postgres database is connected.
+          {dict.admin.dbConnectingBody}
         </Alert>
       )}
 
       {/* Range toggle */}
       <div className="flex justify-end">
         <Tabs
-          items={RANGES.map((r) => ({ id: r, label: r === "all" ? "All time" : r.toUpperCase() }))}
+          items={RANGES.map((r) => ({ id: r, label: r === "all" ? dict.admin.ordersAll : r.toUpperCase() }))}
           value={range}
           onChange={changeRange}
         />
@@ -116,30 +119,30 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label="Gross revenue"
-            value={formatBDT(kpis.revenueBdt)}
-            sub={`${kpis.paid} paid + ${kpis.delivered} delivered in range`}
+            label={dict.admin.revenue}
+            value={bdt(kpis.revenueBdt)}
+            sub={`${kpis.paid} + ${kpis.delivered}`}
             icon={<TrendingUp className="h-4 w-4" />}
             tone="emerald"
           />
           <StatCard
-            label="Total orders"
+            label={dict.admin.orders}
             value={totalOrdersInWindow}
-            sub="All statuses in range"
+            sub={dict.admin.ordersAll}
             icon={<ShoppingCart className="h-4 w-4" />}
             tone="cyan"
           />
           <StatCard
-            label="Delivered"
+            label={dict.status.DELIVERED}
             value={kpis.delivered}
-            sub={`${kpis.processing} processing now`}
+            sub={`${kpis.processing} ${dict.status.PROCESSING}`}
             icon={<CheckCircle2 className="h-4 w-4" />}
             tone="violet"
           />
           <StatCard
-            label="Needs action"
+            label={dict.status.PENDING}
             value={kpis.needsAction}
-            sub={`${kpis.pending} pending · ${kpis.failed} failed`}
+            sub={`${kpis.pending} · ${kpis.failed} ${dict.status.FAILED}`}
             icon={<Clock className="h-4 w-4" />}
             tone="amber"
           />
@@ -149,13 +152,13 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
       {/* Revenue + orders charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader icon={<TrendingUp className="h-4 w-4" />} title="Revenue" description="Daily recognized revenue (paid + delivered)" />
+          <CardHeader icon={<TrendingUp className="h-4 w-4" />} title={dict.admin.revenue} description={dict.admin.revenueDesc} />
           <div className="p-4">
             {loading ? <Skeleton className="h-[200px]" /> : <AreaChart data={series.map((s) => ({ date: s.date, value: s.revenueBdt }))} />}
           </div>
         </Card>
         <Card>
-          <CardHeader icon={<ShoppingCart className="h-4 w-4" />} title="Orders" description="Daily order volume" />
+          <CardHeader icon={<ShoppingCart className="h-4 w-4" />} title={dict.admin.ordersChartTitle} description={dict.admin.ordersChartDesc} />
           <div className="p-4">
             {loading ? <Skeleton className="h-[160px]" /> : <BarChart data={series.map((s) => ({ label: s.date, value: s.orders }))} />}
           </div>
@@ -165,17 +168,17 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
       {/* Status donut + payment split + top products */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
-          <CardHeader icon={<CheckCircle2 className="h-4 w-4" />} title="Status split" />
+          <CardHeader icon={<CheckCircle2 className="h-4 w-4" />} title={dict.admin.statusSplit} />
           <div className="flex min-h-[180px] items-center justify-center p-4">
-            {loading ? <Skeleton className="h-[160px] w-full" /> : <DonutChart segments={donutSegments} centerLabel="orders" />}
+            {loading ? <Skeleton className="h-[160px] w-full" /> : <DonutChart segments={donutSegments} centerLabel={dict.admin.orders} />}
           </div>
         </Card>
 
         <Card>
-          <CardHeader icon={<AlertTriangle className="h-4 w-4" />} title="Payment methods" />
+          <CardHeader icon={<AlertTriangle className="h-4 w-4" />} title={dict.admin.paymentMethods} />
           <div className="space-y-3 p-5">
             {paymentSplit.length === 0 ? (
-              <p className="py-8 text-center text-xs text-faint">No payments in this range.</p>
+              <p className="py-8 text-center text-xs text-faint">{dict.admin.noPayments}</p>
             ) : (
               paymentSplit.map((p) => {
                 const maxRev = Math.max(...paymentSplit.map((x) => x.revenueBdt), 1);
@@ -183,9 +186,11 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
                 return (
                   <div key={p.method} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-ink">{p.method.replaceAll("_", " ")}</span>
+                      <span className="font-medium text-ink">
+                        {dict.payment[p.method as keyof typeof dict.payment] ?? p.method}
+                      </span>
                       <span className="font-mono text-subtle">
-                        {p.orders} · {formatBDT(p.revenueBdt)}
+                        {p.orders} · {bdt(p.revenueBdt)}
                       </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-white/[0.05]">
@@ -199,10 +204,10 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
         </Card>
 
         <Card>
-          <CardHeader icon={<Package className="h-4 w-4" />} title="Top products" />
+          <CardHeader icon={<Package className="h-4 w-4" />} title={dict.admin.topProducts} />
           <div className="space-y-2 p-4">
             {topProducts.length === 0 ? (
-              <p className="py-8 text-center text-xs text-faint">No product sales in this range.</p>
+              <p className="py-8 text-center text-xs text-faint">{dict.admin.noProductSales}</p>
             ) : (
               topProducts.map((p, i) => (
                 <div key={p.slug} className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-white/[0.03]">
@@ -212,8 +217,8 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
                     <div className="font-mono text-[10px] text-faint">{p.slug}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono text-xs font-bold text-ink">{formatBDT(p.revenueBdt)}</div>
-                    <div className="text-[10px] text-faint">{p.orders} orders</div>
+                    <div className="font-mono text-xs font-bold text-ink">{bdt(p.revenueBdt)}</div>
+                    <div className="text-[10px] text-faint">{p.orders} {dict.admin.orders}</div>
                   </div>
                 </div>
               ))
@@ -226,10 +231,10 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
       <Card>
         <CardHeader
           icon={<ShoppingCart className="h-4 w-4" />}
-          title={`Recent orders (${recentOrders.length})`}
+          title={dict.admin.recentOrders.replace("{count}", String(recentOrders.length))}
           action={
             <Button href="/admin/orders" size="sm" variant="ghost">
-              View all
+              {dict.common.viewAll}
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Button>
           }
@@ -238,17 +243,17 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
           <Table>
             <THead>
               <tr>
-                <TH>Order</TH>
-                <TH>Customer</TH>
-                <TH>Product</TH>
-                <TH>Amount</TH>
-                <TH>Status</TH>
-                <TH className="text-right">Receipt</TH>
+                <TH>{dict.dashboard.colOrder}</TH>
+                <TH>{dict.admin.colCustomer}</TH>
+                <TH>{dict.admin.colProduct}</TH>
+                <TH>{dict.admin.colAmount}</TH>
+                <TH>{dict.dashboard.colStatus}</TH>
+                <TH className="text-right">{dict.common.receipt}</TH>
               </tr>
             </THead>
             <TBody>
               {recentOrders.length === 0 ? (
-                <EmptyRow colSpan={6} message="No orders recorded in this range yet." />
+                <EmptyRow colSpan={6} message={dict.admin.noOrdersRange} />
               ) : (
                 recentOrders.map((o) => (
                   <TR key={o.orderNumber}>
@@ -259,16 +264,18 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
                       <div className="font-semibold text-ink">{o.customerEmail}</div>
                       <div className="text-[11px] text-faint">{o.customerPhone}</div>
                     </TD>
-                    <TD className="text-ink">{o.productTitle ?? "Digital item"}</TD>
-                    <TD className="font-mono font-bold text-ink">{formatBDT(o.amountPaidBdt)}</TD>
-                    <TD><StatusBadge status={o.status} /></TD>
+                    <TD className="text-ink">{o.productTitle ?? dict.dashboard.digitalItem}</TD>
+                    <TD className="font-mono font-bold text-ink">{bdt(Number(o.amountPaidBdt))}</TD>
+                    <TD>
+                      <StatusBadge status={o.status} label={dict.status[o.status as keyof typeof dict.status]} />
+                    </TD>
                     <TD className="text-right">
                       <Link
                         href={`/order/${o.orderNumber}`}
                         target="_blank"
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:text-cyan-200"
                       >
-                        Receipt <ExternalLink className="h-3 w-3" />
+                        {dict.common.receipt} <ExternalLink className="h-3 w-3" />
                       </Link>
                     </TD>
                   </TR>
@@ -288,7 +295,7 @@ export function OverviewClient({ initialData }: { initialData: AdminAnalyticsDTO
               className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-2.5 py-1 text-[11px] text-subtle"
             >
               <span className="h-2 w-2 rounded-full" style={{ background: STATUS_COLORS[s.status] ?? "#5b6377" }} />
-              {s.status}
+              {dict.status[s.status as keyof typeof dict.status] ?? s.status}
               <span className="font-mono font-bold text-ink">{s.count}</span>
             </span>
           ))}

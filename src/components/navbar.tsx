@@ -3,19 +3,23 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LogIn, Menu, ShoppingCart, UserRound, X, Zap } from "lucide-react";
-import { siteConfig } from "@/lib/site";
 import { useCart } from "@/components/cart-context";
 import { useAuth } from "@/components/auth-context";
+import { useI18n } from "@/components/locale-provider";
+import { LocaleCurrencySwitcher } from "@/components/locale-currency-switcher";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { hasItem, openCart } = useCart();
   const { user, loading: authLoading } = useAuth();
+  const { dict } = useI18n();
 
-  const navItems = [...siteConfig.nav];
-  if (!navItems.some((i) => i.href === "/dashboard")) {
-    navItems.splice(1, 0, { label: "My Account", href: "/dashboard" });
-  }
+  const navItems = [
+    { label: dict.nav.products, href: "/#products" },
+    { label: dict.nav.myAccount, href: "/dashboard" },
+    { label: dict.nav.trackOrder, href: "/order" },
+    { label: dict.nav.support, href: "https://wa.me/8801735993166" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-xl">
@@ -54,13 +58,18 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2.5">
+          {/* Language + currency switcher (desktop) */}
+          <div className="hidden md:block">
+            <LocaleCurrencySwitcher />
+          </div>
+
           {/* Cart */}
           <button
             type="button"
             onClick={openCart}
             disabled={!hasItem}
-            aria-label="Open cart"
-            title={hasItem ? "Open cart" : "Cart is empty"}
+            aria-label={dict.nav.openCart}
+            title={hasItem ? dict.nav.openCart : dict.nav.cartEmpty}
             className={`relative rounded-xl border p-2.5 transition ${
               hasItem
                 ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300 shadow-[0_0_18px_-4px_rgba(6,182,212,0.7)] hover:bg-cyan-500/20"
@@ -83,7 +92,7 @@ export function Navbar() {
                 className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-sm font-semibold text-[#aab3c5] transition hover:border-violet-500/40 hover:text-violet-300"
               >
                 <UserRound size={16} className="text-violet-400" />
-                <span className="hidden sm:inline">My Account</span>
+                <span className="hidden sm:inline">{dict.nav.myAccount}</span>
               </Link>
             ) : (
               <Link
@@ -91,13 +100,13 @@ export function Navbar() {
                 className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-sm font-semibold text-[#aab3c5] transition hover:border-cyan-500/40 hover:text-cyan-300"
               >
                 <LogIn size={16} />
-                <span className="hidden sm:inline">Sign In</span>
+                <span className="hidden sm:inline">{dict.nav.signIn}</span>
               </Link>
             ))}
 
           <button
             type="button"
-            aria-label="Toggle menu"
+            aria-label={dict.nav.toggleMenu}
             className="rounded-lg p-2 text-[#aab3c5] hover:text-white md:hidden"
             onClick={() => setOpen((v) => !v)}
           >
@@ -130,6 +139,9 @@ export function Navbar() {
               </Link>
             ),
           )}
+          <div className="mt-3 border-t border-white/[0.06] pt-3">
+            <LocaleCurrencySwitcher />
+          </div>
         </nav>
       )}
     </header>

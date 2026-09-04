@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, ShieldCheck, Timer, Zap, ArrowLeft } from "lucide-react";
 import { getActiveProducts, getProductBySlug } from "@/lib/products";
-import { formatBDT } from "@/lib/site";
-import { deliveryTypeLabel } from "@/lib/delivery";
+import { formatMoneyPair } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n";
 import { BuyButton } from "@/components/buy-button";
 
 export const revalidate = 60;
@@ -34,8 +35,17 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const [product, { dict, currency }] = await Promise.all([
+    getProductBySlug(slug),
+    getI18n(),
+  ]);
   if (!product) notFound();
+
+  const { primary, secondary } = formatMoneyPair(product.priceBdt, currency);
+  const warranty =
+    product.warrantyDays >= 365
+      ? dict.common.warrantyYear
+      : interpolate(dict.common.warrantyDays, { days: product.warrantyDays });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -43,7 +53,7 @@ export default async function ProductPage({
         href="/#products"
         className="inline-flex items-center gap-1.5 text-sm text-[#8b93a7] transition hover:text-cyan-300"
       >
-        <ArrowLeft size={15} /> All products
+        <ArrowLeft size={15} /> {dict.product.allProducts}
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
@@ -51,10 +61,12 @@ export default async function ProductPage({
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="badge-instant inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
-              <Zap size={12} className="fill-emerald-400/30" /> Instant delivery
+              <Zap size={12} className="fill-emerald-400/30" />{" "}
+              {dict.product.instantDelivery}
             </span>
             <span className="badge-muted rounded-full px-3 py-1 text-xs font-medium">
-              {deliveryTypeLabel(product.deliveryType)}
+              {dict.deliveryType[product.deliveryType as keyof typeof dict.deliveryType] ??
+                dict.common.digitalDelivery}
             </span>
           </div>
 
@@ -67,7 +79,7 @@ export default async function ProductPage({
 
           <div className="mt-8">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-              What&apos;s included
+              {dict.product.whatsIncluded}
             </h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {product.features.map((feature) => (
@@ -83,13 +95,10 @@ export default async function ProductPage({
 
           <div className="mt-8 flex flex-wrap gap-5 text-sm text-[#8b93a7]">
             <span className="flex items-center gap-2">
-              <Timer size={15} className="text-cyan-400" /> Delivered to your email + on-screen
+              <Timer size={15} className="text-cyan-400" /> {dict.product.deliveredTo}
             </span>
             <span className="flex items-center gap-2">
-              <ShieldCheck size={15} className="text-emerald-400" />
-              {product.warrantyDays >= 365
-                ? "1-year replacement warranty"
-                : `${product.warrantyDays}-day replacement warranty`}
+              <ShieldCheck size={15} className="text-emerald-400" /> {warranty}
             </span>
           </div>
         </div>
@@ -97,25 +106,20 @@ export default async function ProductPage({
         {/* ---- Purchase card ---- */}
         <div className="glass-card h-fit rounded-2xl p-6 lg:sticky lg:top-24">
           <div className="flex items-baseline gap-2">
-            <span className="font-display text-4xl font-extrabold">
-              {formatBDT(product.priceBdt)}
-            </span>
-            {product.priceUsd && (
-              <span className="text-sm text-[#5b6377]">
-                ≈ ${Number(product.priceUsd).toFixed(2)}
-              </span>
-            )}
+            <span className="font-display text-4xl font-extrabold">{primary}</span>
+            <span className="text-sm text-[#5b6377]">{secondary}</span>
           </div>
 
           <ul className="mt-5 space-y-2 text-sm text-[#aab3c5]">
             <li className="flex items-center gap-2">
-              <Zap size={13} className="text-cyan-400" /> Instant automated delivery
+              <Zap size={13} className="text-cyan-400" /> {dict.product.featureInstant}
             </li>
             <li className="flex items-center gap-2">
-              <ShieldCheck size={13} className="text-emerald-400" /> Replacement guarantee
+              <ShieldCheck size={13} className="text-emerald-400" />{" "}
+              {dict.product.featureWarranty}
             </li>
             <li className="flex items-center gap-2">
-              <Check size={13} className="text-violet-400" /> bKash · Nagad · Binance Pay
+              <Check size={13} className="text-violet-400" /> {dict.product.featurePay}
             </li>
           </ul>
 
@@ -124,7 +128,7 @@ export default async function ProductPage({
           </div>
 
           <p className="mt-4 text-center text-xs text-[#5b6377]">
-            No account needed. Credential delivered in seconds.
+            {dict.product.noAccount}
           </p>
         </div>
       </div>

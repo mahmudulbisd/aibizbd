@@ -17,9 +17,9 @@
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--fg);
-  --font-sans: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-plus-jakarta-sans), var(--font-noto-sans-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), var(--font-noto-sans-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), var(--font-noto-sans-bengali), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Console / dashboard tokens (refined dark SaaS) */
   --color-ink: #e8ecf4;

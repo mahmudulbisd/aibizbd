@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Mail, MapPin, MessageCircle, Zap } from "lucide-react";
 import { siteConfig } from "@/lib/site";
+import type { Dictionary } from "@/lib/i18n";
+import { interpolate } from "@/lib/i18n";
 
-export function Footer() {
+export function Footer({ dict }: { dict: Dictionary }) {
   return (
     <footer className="relative z-10 border-t border-white/[0.06] py-10">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-4 sm:px-6 md:flex-row md:items-start md:justify-between">
@@ -15,15 +17,12 @@ export function Footer() {
               Ai<span className="text-gradient">Biz</span> BD
             </span>
           </div>
-          <p className="mt-3 text-sm leading-relaxed text-[#8b93a7]">
-            Premium AI tools and digital subscriptions, delivered in seconds.
-            Pay your way — bKash, Nagad or Binance Pay.
-          </p>
+          <p className="mt-3 text-sm leading-relaxed text-[#8b93a7]">{dict.footer.blurb}</p>
         </div>
 
         <div className="flex flex-col items-center gap-2 text-sm text-[#8b93a7] md:items-start">
           <span className="font-semibold uppercase tracking-widest text-[#5b6377] text-xs">
-            Contact
+            {dict.footer.contact}
           </span>
           <a
             href={`mailto:${siteConfig.contactEmail}`}
@@ -46,19 +45,23 @@ export function Footer() {
 
         <div className="flex flex-col items-center gap-2 text-sm text-[#8b93a7] md:items-start">
           <span className="font-semibold uppercase tracking-widest text-[#5b6377] text-xs">
-            Store
+            {dict.footer.store}
           </span>
           <Link href="/#products" className="transition hover:text-cyan-300">
-            All products
+            {dict.footer.allProducts}
           </Link>
           <Link href="/order" className="transition hover:text-cyan-300">
-            Track your order
+            {dict.footer.trackOrder}
           </Link>
         </div>
       </div>
 
       <p className="mt-10 text-center text-xs text-[#4a5165]">
-        © {new Date().getFullYear()} {siteConfig.name} · {siteConfig.location}
+        {interpolate(dict.footer.copyright, {
+          year: new Date().getFullYear(),
+          name: siteConfig.name,
+          location: siteConfig.location,
+        })}
       </p>
     </footer>
   );

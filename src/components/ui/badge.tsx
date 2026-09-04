@@ -32,7 +32,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tones[tone]} ${className}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${tones[tone]} ${className}`}
     >
       {children}
     </span>
@@ -48,11 +48,24 @@ const statusTone: Record<OrderStatus, BadgeTone> = {
   REFUNDED: "rose",
 };
 
-export function StatusBadge({ status }: { status: OrderStatus | string }) {
+export function StatusBadge({
+  status,
+  label,
+}: {
+  status: OrderStatus | string;
+  /** Translated display label; falls back to the raw enum when omitted. */
+  label?: string;
+}) {
   const tone = statusTone[status as OrderStatus] ?? "neutral";
-  return <Badge tone={tone}>{status}</Badge>;
+  return <Badge tone={tone}>{label ?? status}</Badge>;
 }
 
-export function PaymentBadge({ method }: { method: string }) {
-  return <Badge tone="neutral">{method.replaceAll("_", " ")}</Badge>;
+export function PaymentBadge({
+  method,
+  label,
+}: {
+  method: string;
+  label?: string;
+}) {
+  return <Badge tone="neutral">{label ?? method.replaceAll("_", " ")}</Badge>;
 }

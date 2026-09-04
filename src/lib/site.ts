@@ -34,7 +34,4 @@ export const siteConfig = {
   ],
 };
 
-export function formatBDT(amount: number | string): string {
-  const n = typeof amount === "string" ? Number(amount) : amount;
-  return `৳${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
+

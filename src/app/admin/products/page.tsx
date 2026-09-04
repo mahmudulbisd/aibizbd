@@ -7,40 +7,34 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableContainer, Table, THead, TH, TBody, TR, TD, EmptyRow } from "@/components/ui/table";
-import { formatBDT } from "@/lib/site";
+import { formatMoney } from "@/lib/format";
 import { grossMarginPct } from "@/lib/pricing";
+import { getI18n } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Products — Ai Biz BD Admin",
-  description: "Product catalog, pricing structures, supplier costs and profit margins.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return {
+    title: `${dict.admin.productsTitle} — Ai Biz BD Admin`,
+    description: dict.admin.productsSub,
+  };
+}
 
 export const dynamic = "force-dynamic";
 
-function marginBadge(marginPct: number, profitUsd: number) {
-  const tone =
-    marginPct >= 50 ? "emerald" : marginPct >= 20 ? "blue" : "amber";
-  return (
-    <Badge tone={tone}>
-      +{marginPct}% (${profitUsd.toFixed(2)})
-    </Badge>
-  );
-}
-
 export default async function AdminProductsPage() {
   await requireAdmin();
-  const catalog = await getAdminCatalog();
+  const [{ dict }, catalog] = await Promise.all([getI18n(), getAdminCatalog()]);
 
   return (
     <AdminShell activeTab="products">
       <PageHeader
-        eyebrow="Catalog"
-        title="Products & Margins"
-        description="Active pricing, supplier wholesale costs, margins and delivery configuration."
+        eyebrow={dict.admin.productsEyebrow}
+        title={dict.admin.productsTitle}
+        description={dict.admin.productsSub}
         actions={
           <Button href="/#products" target="_blank" variant="secondary">
             <ExternalLink className="h-3.5 w-3.5" />
-            Preview storefront
+            {dict.admin.productsPreview}
           </Button>
         }
       />
@@ -50,25 +44,27 @@ export default async function AdminProductsPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Product</TH>
-                <TH>Retail (BDT)</TH>
-                <TH>Price (USD)</TH>
-                <TH>Wholesale cost</TH>
-                <TH>Gross margin</TH>
-                <TH>Fulfillment</TH>
-                <TH>Warranty</TH>
-                <TH className="text-right">Status</TH>
+                <TH>{dict.admin.colProduct}</TH>
+                <TH>{dict.admin.colRetailBdt}</TH>
+                <TH>{dict.admin.colPriceUsd}</TH>
+                <TH>{dict.admin.colWholesale}</TH>
+                <TH>{dict.admin.colMargin}</TH>
+                <TH>{dict.admin.colFulfillment}</TH>
+                <TH>{dict.admin.colWarranty}</TH>
+                <TH className="text-right">{dict.dashboard.colStatus}</TH>
               </tr>
             </THead>
             <TBody>
               {catalog.length === 0 ? (
-                <EmptyRow colSpan={8} message="No products in the catalog." />
+                <EmptyRow colSpan={8} message={dict.admin.productsEmpty} />
               ) : (
                 catalog.map((p: AdminCatalogItem) => {
                   const priceUsd = Number(p.priceUsd ?? 0);
                   const costUsd = Number(p.wholesaleCostUsd ?? 0);
                   const profitUsd = priceUsd - costUsd;
                   const marginPct = grossMarginPct(priceUsd, costUsd);
+                  const marginTone = marginPct >= 50 ? "emerald" : marginPct >= 20 ? "blue" : "amber";
+                  const warrantyLabel = dict.admin.days.replace("{days}", String(p.warrantyDays));
 
                   return (
                     <TR key={p.slug}>
@@ -76,14 +72,22 @@ export default async function AdminProductsPage() {
                         <div className="font-semibold text-ink">{p.title}</div>
                         <div className="font-mono text-[11px] text-accent/80">{p.slug}</div>
                       </TD>
-                      <TD className="font-mono font-bold text-ink">{formatBDT(p.priceBdt)}</TD>
+                      <TD className="font-mono font-bold text-ink">{formatMoney(p.priceBdt, "BDT")}</TD>
                       <TD className="font-mono text-ink">${priceUsd.toFixed(2)}</TD>
                       <TD className="font-mono text-amber-400">${costUsd.toFixed(2)}</TD>
-                      <TD>{marginBadge(marginPct, profitUsd)}</TD>
+                      <TD>
+                        <Badge tone={marginTone}>
+                          +{marginPct}% (${profitUsd.toFixed(2)})
+                        </Badge>
+                      </TD>
                       <TD><Badge tone="neutral">{p.deliveryType}</Badge></TD>
-                      <TD className="text-subtle">{p.warrantyDays} days</TD>
+                      <TD className="text-subtle">{warrantyLabel}</TD>
                       <TD className="text-right">
-                        {p.isActive ? <Badge tone="emerald">Live</Badge> : <Badge tone="rose">Inactive</Badge>}
+                        {p.isActive ? (
+                          <Badge tone="emerald">{dict.admin.live}</Badge>
+                        ) : (
+                          <Badge tone="rose">{dict.admin.inactive}</Badge>
+                        )}
                       </TD>
                     </TR>
                   );

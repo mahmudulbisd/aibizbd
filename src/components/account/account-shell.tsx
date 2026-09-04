@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { Zap, ArrowLeft } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { getI18n } from "@/lib/i18n/server";
 
-export function AccountShell({
+export async function AccountShell({
   email,
   children,
 }: {
   email: string;
   children: React.ReactNode;
 }) {
+  const { dict } = await getI18n();
+
   return (
     <div className="min-h-dvh bg-background text-ink">
       <header className="sticky top-0 z-30 border-b border-line bg-background/90 backdrop-blur">
@@ -20,7 +23,7 @@ export function AccountShell({
             <div className="leading-tight">
               <div className="font-display text-sm font-bold tracking-tight">Ai Biz BD</div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
-                My Account
+                {dict.dashboard.title}
               </div>
             </div>
           </Link>
@@ -34,7 +37,7 @@ export function AccountShell({
               className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-subtle transition hover:text-ink"
             >
               <ArrowLeft className="h-3 w-3" />
-              Browse store
+              {dict.dashboard.browseStore}
             </Link>
             <SignOutButton />
           </div>

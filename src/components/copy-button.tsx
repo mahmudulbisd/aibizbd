@@ -2,9 +2,18 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useI18n } from "@/components/locale-provider";
 
-export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
+export function CopyButton({
+  text,
+  label,
+}: {
+  text: string;
+  label?: string;
+}) {
+  const { dict } = useI18n();
   const [copied, setCopied] = useState(false);
+  const resolvedLabel = label ?? dict.common.copy;
 
   async function copy() {
     try {
@@ -29,7 +38,7 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
       className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-[#aab3c5] transition hover:bg-cyan-500/15 hover:text-cyan-300"
     >
       {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-      {copied ? "Copied!" : label}
+      {copied ? dict.common.copied : resolvedLabel}
     </button>
   );
 }

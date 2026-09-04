@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { createMagicLinkToken } from "@/lib/auth";
 import { siteConfig } from "@/lib/site";
+import { getLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n";
+import { LOCALE_COOKIE, isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
 
@@ -24,6 +28,12 @@ export async function POST(req: Request) {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const magicUrl = `${base}/api/auth/verify?token=${encodeURIComponent(token)}`;
 
+  // Localize the magic-link email from the sender's cookie (default Bengali).
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(LOCALE_COOKIE)?.value;
+  const locale = isLocale(raw) ? raw : await getLocale();
+  const dict = getDictionary(locale);
+
   const apiKey = process.env.RESEND_API_KEY;
   const isDev = process.env.NODE_ENV !== "production";
   let devMagicUrl: string | null = null;
@@ -36,11 +46,13 @@ export async function POST(req: Request) {
     try {
       const { Resend } = await import("resend");
       const resend = new Resend(apiKey);
+      const subject = dict.email.magicSubject.replace("{name}", siteConfig.name);
+      const html = `<p>${dict.email.magicBody.replace("{name}", siteConfig.name)}</p><p><a href="${magicUrl}" style="display:inline-block;background:#06b6d4;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">${dict.email.magicCta}</a></p><p style="color:#5b6377">${dict.email.magicExpires}</p>`;
       await resend.emails.send({
         from: process.env.EMAIL_FROM ?? "Ai Biz BD <onboarding@resend.dev>",
         to: [email],
-        subject: `Your sign-in link — ${siteConfig.name}`,
-        html: `<p>Click to sign in to your ${siteConfig.name} account:</p><p><a href="${magicUrl}">Sign in securely</a></p><p>This link expires in 15 minutes.</p>`,
+        subject,
+        html,
       });
     } catch (err) {
       console.error("magic link email failed:", err);

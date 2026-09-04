@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { getOrderByNumber } from "@/lib/orders";
+import { formatMoney } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
 import { MockGatewayClient } from "./mock-gateway-client";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +18,8 @@ export default async function MockPayPage({
     redirect("/order?error=not_found");
   }
 
+  const { dict } = await getI18n();
+
   return (
     <div className="bg-cyber min-h-[70vh]">
       <div className="mx-auto max-w-md px-4 py-16">
@@ -23,18 +27,17 @@ export default async function MockPayPage({
           <p className="terminal-line text-xs">mock gateway // sandbox</p>
           <h1 className="font-display mt-3 text-2xl font-bold">Test payment</h1>
           <p className="mt-1 text-sm text-[#8b93a7]">
-            {order.productSnapshot?.title} ·{" "}
-            {order.amountPaidBdt ? `৳${order.amountPaidBdt}` : ""}
+            {order.productSnapshot?.title} · {formatMoney(order.amountPaidBdt, "BDT")}
           </p>
           <div className="mt-6 space-y-3 text-sm">
             <div className="flex justify-between rounded-lg bg-white/[0.03] px-4 py-3">
-              <span className="text-[#8b93a7]">Order</span>
+              <span className="text-[#8b93a7]">{dict.order.orderShort}</span>
               <span className="font-mono">{order.orderNumber}</span>
             </div>
             <div className="flex justify-between rounded-lg bg-white/[0.03] px-4 py-3">
-              <span className="text-[#8b93a7]">Amount</span>
+              <span className="text-[#8b93a7]">{dict.checkout.total}</span>
               <span className="font-semibold text-emerald-400">
-                ৳{order.amountPaidBdt}
+                {formatMoney(order.amountPaidBdt, "BDT")}
               </span>
             </div>
           </div>

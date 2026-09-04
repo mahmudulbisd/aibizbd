@@ -13,6 +13,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useI18n } from "@/components/locale-provider";
+import { LocaleCurrencySwitcher } from "@/components/locale-currency-switcher";
 import { AdminLogoutButton } from "./admin-logout-button";
 
 interface AdminShellProps {
@@ -21,51 +23,28 @@ interface AdminShellProps {
   orderCount?: number;
 }
 
-const NAV_ITEMS = [
-  {
-    id: "overview" as const,
-    label: "Overview",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    id: "orders" as const,
-    label: "Orders",
-    href: "/admin/orders",
-    icon: ShoppingCart,
-  },
-  {
-    id: "products" as const,
-    label: "Products",
-    href: "/admin/products",
-    icon: Package,
-  },
-  {
-    id: "settings" as const,
-    label: "Settings",
-    href: "/admin/settings",
-    icon: Sliders,
-  },
-  {
-    id: "commands" as const,
-    label: "Commands",
-    href: "/admin/commands",
-    icon: Terminal,
-  },
-];
-
 function NavList({
   activeTab,
   orderCount,
+  dict,
   onNavigate,
 }: {
   activeTab: AdminShellProps["activeTab"];
   orderCount?: number;
+  dict: ReturnType<typeof useI18n>["dict"];
   onNavigate?: () => void;
 }) {
+  const items = [
+    { id: "overview" as const, label: dict.admin.overview, href: "/admin", icon: LayoutDashboard },
+    { id: "orders" as const, label: dict.admin.orders, href: "/admin/orders", icon: ShoppingCart },
+    { id: "products" as const, label: dict.admin.products, href: "/admin/products", icon: Package },
+    { id: "settings" as const, label: dict.admin.settings, href: "/admin/settings", icon: Sliders },
+    { id: "commands" as const, label: dict.admin.commands, href: "/admin/commands", icon: Terminal },
+  ];
+
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const isActive = activeTab === item.id;
         return (
@@ -95,6 +74,7 @@ function NavList({
 
 export function AdminShell({ children, activeTab, orderCount }: AdminShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { dict } = useI18n();
 
   return (
     <div className="min-h-dvh bg-background text-ink">
@@ -109,12 +89,16 @@ export function AdminShell({ children, activeTab, orderCount }: AdminShellProps)
               Ai Biz BD
             </div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
-              Admin Console
+              {dict.admin.consoleName}
             </div>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3 no-scrollbar">
-          <NavList activeTab={activeTab} orderCount={orderCount} />
+          <NavList activeTab={activeTab} orderCount={orderCount} dict={dict} />
+          {/* Locale toggle (currency stays BDT in admin) */}
+          <div className="mt-4 border-t border-line pt-4">
+            <LocaleCurrencySwitcher showCurrency={false} />
+          </div>
         </div>
         <div className="border-t border-line p-3">
           <Link
@@ -123,7 +107,7 @@ export function AdminShell({ children, activeTab, orderCount }: AdminShellProps)
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-subtle transition hover:bg-white/[0.04] hover:text-ink"
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Live Storefront
+            {dict.admin.liveStorefront}
           </Link>
           <div className="mt-1 px-3">
             <AdminLogoutButton />
@@ -137,21 +121,29 @@ export function AdminShell({ children, activeTab, orderCount }: AdminShellProps)
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
             <Zap className="h-3.5 w-3.5 text-white" />
           </div>
-          <span className="font-display text-sm font-bold text-ink">Admin Console</span>
+          <span className="font-display text-sm font-bold text-ink">{dict.admin.consoleName}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setMobileOpen((v) => !v)}
-          className="rounded-lg border border-line p-2 text-subtle"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <LocaleCurrencySwitcher showCurrency={false} />
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="rounded-lg border border-line p-2 text-subtle"
+            aria-label={dict.nav.toggleMenu}
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
       </header>
 
       {mobileOpen && (
         <div className="border-b border-line bg-panel px-4 py-3 lg:hidden">
-          <NavList activeTab={activeTab} orderCount={orderCount} onNavigate={() => setMobileOpen(false)} />
+          <NavList
+            activeTab={activeTab}
+            orderCount={orderCount}
+            dict={dict}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </div>
       )}
 

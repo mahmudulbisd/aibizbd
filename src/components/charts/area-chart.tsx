@@ -1,17 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
-import { formatBDT } from "@/lib/site";
+import { useI18n } from "@/components/locale-provider";
 
 interface Point {
   date: string;
   value: number;
   secondary?: number;
-}
-
-function fmtShort(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 /** Simple dependency-free SVG area chart with gradient fill + hover. */
@@ -25,6 +20,7 @@ export function AreaChart({
   color?: string;
 }) {
   const gid = useId();
+  const { dict, dateShort } = useI18n();
   const [hover, setHover] = useState<number | null>(null);
 
   const W = 640;
@@ -34,7 +30,7 @@ export function AreaChart({
   if (data.length === 0) {
     return (
       <div className="flex h-[200px] items-center justify-center text-xs text-faint">
-        No data for this range yet.
+        {dict.admin.noData}
       </div>
     );
   }
@@ -115,7 +111,7 @@ export function AreaChart({
               fill="#22d3ee"
               fontFamily="JetBrains Mono, monospace"
             >
-              {formatBDT(pts[hover].value)}
+              {dict.currency.bdt}{pts[hover].value.toLocaleString("en-IN")}
             </text>
             <text
               x={Math.min(Math.max(pts[hover].x - 60, 0) + 65, W - 65)}
@@ -124,7 +120,7 @@ export function AreaChart({
               fontSize="9"
               fill="#98a1b3"
             >
-              {fmtShort(pts[hover].date)}
+              {dateShort(pts[hover].date)}
             </text>
           </g>
         )}

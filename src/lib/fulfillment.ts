@@ -6,7 +6,8 @@ import { getSupplierClient } from "@/lib/supplier";
 import { encryptSecret } from "@/lib/crypto";
 import { sendDeliveryEmail } from "@/lib/email";
 import { notifyAdmin } from "@/lib/telegram";
-import { formatBDT } from "@/lib/site";
+import { formatMoney } from "@/lib/format";
+import { localeFromPhone } from "@/lib/i18n/config";
 import { markDelivered, transitionOrder } from "@/lib/orders";
 
 /**
@@ -88,6 +89,7 @@ export async function fulfillOrder(orderNumber: string): Promise<void> {
       orderNumber: orderRow.orderNumber,
       productTitle: orderRow.productSnapshot?.title ?? "Your product",
       delivery: purchase.delivery,
+      locale: localeFromPhone(orderRow.customerPhone),
     }).catch((err) => console.error("delivery email failed:", err));
 
     const balanceNote =
@@ -98,7 +100,7 @@ export async function fulfillOrder(orderNumber: string): Promise<void> {
       `🟢 <b>New Order Delivered!</b>\n` +
         `📦 ${orderRow.productSnapshot?.title ?? "Digital product"}\n` +
         `🧾 ${orderRow.orderNumber}\n` +
-        `💵 Paid: ${formatBDT(orderRow.amountPaidBdt)} · ${orderRow.paymentMethod}\n` +
+        `💵 Paid: ${formatMoney(orderRow.amountPaidBdt, "BDT")} · ${orderRow.paymentMethod}\n` +
         `👤 ${orderRow.customerEmail} (${orderRow.customerPhone})\n` +
         balanceNote,
     ).catch((err) => console.error("telegram alert failed:", err));

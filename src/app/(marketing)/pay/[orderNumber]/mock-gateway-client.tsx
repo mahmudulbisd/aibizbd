@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/components/locale-provider";
 
 /** Button that "completes" the mock payment via a server-side route. */
 export function MockGatewayClient({
@@ -12,6 +13,7 @@ export function MockGatewayClient({
   lookupSecret: string;
 }) {
   const router = useRouter();
+  const { dict } = useI18n();
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -24,14 +26,14 @@ export function MockGatewayClient({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        setError(data.error ?? "Payment could not be completed.");
+        setError(data.error ?? dict.checkout.errorGeneric);
         setState("idle");
         return;
       }
       setState("done");
       router.push(`/order/${orderNumber}?lookup=${lookupSecret}`);
     } catch {
-      setError("Network error — please try again.");
+      setError(dict.checkout.errorNetwork);
       setState("idle");
     }
   }
@@ -45,10 +47,10 @@ export function MockGatewayClient({
         className="btn-neon w-full rounded-xl px-6 py-3.5 font-semibold text-white disabled:opacity-60"
       >
         {state === "loading"
-          ? "Confirming payment…"
+          ? dict.checkout.creating
           : state === "done"
             ? "Paid ✓"
-            : "Pay now (mock)"}
+            : dict.checkout.submit}
       </button>
       {error && <p className="mt-3 text-center text-sm text-rose-400">{error}</p>}
     </div>

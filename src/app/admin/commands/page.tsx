@@ -5,23 +5,28 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { CommandCard } from "./command-card";
+import { getI18n } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Command Center — Ai Biz BD Admin",
-  description: "Developer cheatsheet, database migrations, security keys and API test commands.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return {
+    title: `${dict.admin.commandsTitle} — Ai Biz BD Admin`,
+    description: dict.admin.commandsSub,
+  };
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCommandsPage() {
   await requireAdmin();
+  const { dict } = await getI18n();
 
   return (
     <AdminShell activeTab="commands">
       <PageHeader
-        eyebrow="Runbook"
-        title="Command Center"
-        description="Copy commands and run them in your terminal — one click for every operation."
+        eyebrow={dict.admin.commandsEyebrow}
+        title={dict.admin.commandsTitle}
+        description={dict.admin.commandsSub}
       />
 
       <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
@@ -113,17 +118,9 @@ export default async function AdminCommandsPage() {
             <HelpCircle className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-ink">
-              How to add a new environment variable
-            </h4>
+            <h4 className="text-sm font-bold text-ink">{dict.admin.commandsFooterTitle}</h4>
             <p className="mt-1 text-xs leading-relaxed text-subtle">
-              Go to your project in the Vercel dashboard, open{" "}
-              <strong className="text-ink">Settings → Environment Variables</strong>, add the key
-              name (e.g.{" "}
-              <code className="rounded border border-line bg-panel-strong px-1 font-mono text-accent">ADMIN_PASSWORD</code>,{" "}
-              <code className="rounded border border-line bg-panel-strong px-1 font-mono text-accent">ENCRYPTION_KEY</code>)
-              and its value, then click{" "}
-              <strong className="text-ink">Save</strong>. Redeploy once and the new key becomes active.
+              {dict.admin.commandsFooterBody}
             </p>
           </div>
         </div>

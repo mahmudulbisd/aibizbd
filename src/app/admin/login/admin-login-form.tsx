@@ -7,8 +7,11 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/components/locale-provider";
 
 export function AdminLoginForm() {
+  const { dict } = useI18n();
+  const a = dict.admin;
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,10 +30,8 @@ export function AdminLoginForm() {
         body: JSON.stringify({ password }),
       });
 
-      const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
-        throw new Error(data.error || "Authentication failed. Incorrect password.");
+        throw new Error(a.loginError);
       }
 
       setSuccess(true);
@@ -39,7 +40,7 @@ export function AdminLoginForm() {
         router.refresh();
       }, 400);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Authentication error");
+      setError(err instanceof Error ? err.message : a.loginError);
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,7 @@ export function AdminLoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="Admin secret key or password">
+      <Field label={a.loginLabel}>
         <div className="relative">
           <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
           <Input
@@ -56,7 +57,7 @@ export function AdminLoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             autoFocus
-            placeholder="••••••••••••••••"
+            placeholder={a.loginPlaceholder}
             className="pl-10"
           />
         </div>
@@ -70,7 +71,7 @@ export function AdminLoginForm() {
 
       {success && (
         <Alert tone="success" icon={<CheckCircle2 className="h-4 w-4" />}>
-          Authenticated! Redirecting…
+          {a.loginSuccess}
         </Alert>
       )}
 
@@ -83,12 +84,12 @@ export function AdminLoginForm() {
       >
         {!loading && !success && (
           <>
-            Enter Admin Portal
+            {a.loginSubmit}
             <ArrowRight className="h-4 w-4" />
           </>
         )}
-        {loading && "Verifying…"}
-        {success && "Welcome back"}
+        {loading && a.loginVerifying}
+        {success && a.loginWelcome}
       </Button>
     </form>
   );

@@ -4,17 +4,24 @@ import { ShieldCheck } from "lucide-react";
 import { isAdminAuthenticated } from "@/lib/admin";
 import { Card } from "@/components/ui/card";
 import { AdminLoginForm } from "./admin-login-form";
+import { getI18n } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Admin Sign In — Ai Biz BD",
-  description: "Secure administrator authentication portal.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return {
+    title: `${dict.admin.loginPageTitle} — Ai Biz BD`,
+    description: dict.admin.loginSubtitle,
+  };
+}
 
 export default async function AdminLoginPage() {
   const authed = await isAdminAuthenticated();
   if (authed) {
     redirect("/admin");
   }
+
+  const { dict } = await getI18n();
+  const a = dict.admin;
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center bg-background px-4 py-16">
@@ -28,14 +35,12 @@ export default async function AdminLoginPage() {
             <ShieldCheck className="h-6 w-6" />
           </div>
           <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-subtle">
-            Protected zone
+            {a.loginProtected}
           </span>
           <h1 className="font-display mt-3 text-2xl font-bold tracking-tight text-ink">
-            Admin Console
+            {a.loginTitle}
           </h1>
-          <p className="mt-1.5 text-xs text-subtle">
-            Enter your secret key or password to manage orders, products and settings.
-          </p>
+          <p className="mt-1.5 text-xs text-subtle">{a.loginSubtitle}</p>
         </div>
 
         <div className="mt-8">
@@ -43,9 +48,7 @@ export default async function AdminLoginPage() {
         </div>
 
         <div className="mt-8 border-t border-line pt-4 text-center">
-          <p className="text-[11px] text-faint">
-            Ai Biz BD Automated Reseller Architecture · Dhaka, BD
-          </p>
+          <p className="text-[11px] text-faint">{a.footerTag}</p>
         </div>
       </Card>
     </div>

@@ -3,16 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, Loader2, ShieldCheck, X } from "lucide-react";
-import { formatBDT } from "@/lib/site";
+import { useI18n } from "@/components/locale-provider";
+import { formatMoneyPair } from "@/lib/format";
 import type { CartItem } from "@/components/cart-context";
 
 type PayMethod = "BKASH" | "NAGAD" | "BINANCE_PAY";
-
-const PAY_METHODS: { id: PayMethod; label: string; note: string }[] = [
-  { id: "BKASH", label: "bKash", note: "Personal / merchant" },
-  { id: "NAGAD", label: "Nagad", note: "Personal / merchant" },
-  { id: "BINANCE_PAY", label: "Binance Pay", note: "USDT / crypto" },
-];
 
 export function CheckoutDrawer({
   item,
@@ -22,11 +17,18 @@ export function CheckoutDrawer({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { dict, currency } = useI18n();
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<PayMethod>("BKASH");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const PAY_METHODS: { id: PayMethod; label: string; note: string }[] = [
+    { id: "BKASH", label: dict.payment.BKASH, note: dict.checkout.noteBkash },
+    { id: "NAGAD", label: dict.payment.NAGAD, note: dict.checkout.noteNagad },
+    { id: "BINANCE_PAY", label: dict.payment.BINANCE_PAY, note: dict.checkout.noteBinance },
+  ];
 
   async function submit() {
     setError(null);
@@ -46,12 +48,12 @@ export function CheckoutDrawer({
       if (!res.ok || !data.ok) {
         setError(
           data.error === "INVALID_INPUT"
-            ? "Please check your email and WhatsApp number."
+            ? dict.checkout.errorInvalid
             : data.error === "PRODUCT_NOT_FOUND"
-              ? "That product is no longer available."
+              ? dict.checkout.errorProductGone
               : data.error === "DB_UNAVAILABLE"
-                ? "Store is starting up — please try again in a moment."
-                : "Something went wrong — please try again.",
+                ? dict.checkout.errorDb
+                : dict.checkout.errorGeneric,
         );
         setSubmitting(false);
         return;
@@ -64,10 +66,12 @@ export function CheckoutDrawer({
         router.push(`/order/${intent.orderNumber}`);
       }
     } catch {
-      setError("Network error — please try again.");
+      setError(dict.checkout.errorNetwork);
       setSubmitting(false);
     }
   }
+
+  const { primary } = formatMoneyPair(item.priceBdt, currency);
 
   const inputCls =
     "w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-[#5b6377] outline-none transition focus:border-cyan-500/50 focus:bg-white/[0.05]";
@@ -79,13 +83,13 @@ export function CheckoutDrawer({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Checkout"
+        aria-label={dict.nav.checkout}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-              Fast checkout
+              {dict.checkout.eyebrow}
             </p>
             <p className="font-display mt-0.5 text-sm font-semibold text-white">
               {item.title}
@@ -94,7 +98,7 @@ export function CheckoutDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close checkout"
+            aria-label={dict.nav.closeCheckout}
             className="rounded-lg p-2 text-[#8b93a7] transition hover:bg-white/[0.06] hover:text-white"
           >
             <X size={18} />
@@ -104,21 +108,21 @@ export function CheckoutDrawer({
         {/* Body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
           <div className="flex items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3">
-            <span className="text-sm text-[#8b93a7]">Total</span>
+            <span className="text-sm text-[#8b93a7]">{dict.checkout.total}</span>
             <span className="font-display text-xl font-extrabold text-white">
-              {formatBDT(item.priceBdt)}
+              {primary}
             </span>
           </div>
 
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#8b93a7]">
-              Email (delivery)
+              {dict.checkout.emailLabel}
             </span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={dict.checkout.emailPlaceholder}
               className={inputCls}
               autoComplete="email"
             />
@@ -126,13 +130,13 @@ export function CheckoutDrawer({
 
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#8b93a7]">
-              WhatsApp number
+              {dict.checkout.whatsappLabel}
             </span>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+880 1XXX-XXXXXX"
+              placeholder={dict.checkout.whatsappPlaceholder}
               className={inputCls}
               autoComplete="tel"
             />
@@ -140,7 +144,7 @@ export function CheckoutDrawer({
 
           <div>
             <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#8b93a7]">
-              Payment method
+              {dict.checkout.paymentLabel}
             </span>
             <div className="grid grid-cols-3 gap-2">
               {PAY_METHODS.map((m) => (
@@ -178,20 +182,21 @@ export function CheckoutDrawer({
           >
             {submitting ? (
               <>
-                <Loader2 size={17} className="animate-spin" /> Creating order…
+                <Loader2 size={17} className="animate-spin" /> {dict.checkout.creating}
               </>
             ) : (
               <>
-                <CreditCard size={17} /> Pay &amp; Instant Unlock
+                <CreditCard size={17} /> {dict.checkout.submit}
               </>
             )}
           </button>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-[#5b6377]">
             <ShieldCheck size={12} className="text-emerald-400" />
-            Secure payment · Instant automated delivery · Replacement warranty
+            {dict.checkout.secureLine}
           </p>
         </div>
       </div>
     </div>
   );
 }
+

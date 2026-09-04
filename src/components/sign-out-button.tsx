@@ -3,9 +3,11 @@
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/components/locale-provider";
 
 export function SignOutButton({ className = "" }: { className?: string }) {
   const router = useRouter();
+  const { dict } = useI18n();
 
   return (
     <Button
@@ -19,7 +21,7 @@ export function SignOutButton({ className = "" }: { className?: string }) {
       }}
     >
       <LogOut className="h-3.5 w-3.5" />
-      Sign out
+      {dict.dashboard.signOut}
     </Button>
   );
 }

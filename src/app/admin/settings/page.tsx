@@ -16,11 +16,15 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getI18n } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Settings — Ai Biz BD Admin",
-  description: "Environment keys, authentication diagnostics and site configuration.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return {
+    title: `${dict.admin.settingsTitle} — Ai Biz BD Admin`,
+    description: dict.admin.settingsSub,
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -66,18 +70,20 @@ function LabelRow({ label, value, mono = false }: { label: string; value: string
 
 export default async function AdminSettingsPage() {
   await requireAdmin();
+  const { dict } = await getI18n();
   const d = getSystemDiagnostics();
+  const a = dict.admin;
 
   return (
     <AdminShell activeTab="settings">
       <PageHeader
-        eyebrow="System"
-        title="Settings & Diagnostics"
-        description="Database, master keys, payment gateways and automated alert configuration."
+        eyebrow={a.settingsEyebrow}
+        title={a.settingsTitle}
+        description={a.settingsSub}
         actions={
           <Button href="/admin/commands" variant="secondary">
             <Terminal className="h-3.5 w-3.5" />
-            Command Center
+            {a.settingsCommandCenter}
           </Button>
         }
       />
@@ -87,26 +93,26 @@ export default async function AdminSettingsPage() {
         <Card>
           <CardHeader
             icon={<ShieldCheck className="h-4 w-4" />}
-            title="Security & Master Auth"
-            description="Encryption keys & access protection"
+            title={a.settingsSecurity}
+            description={a.settingsSecurityDesc}
           />
           <CardBody className="space-y-3">
             <StatusRow
-              title="Admin dashboard key"
-              detail={d.auth.hasAdminPassword ? "Custom key active via ADMIN_PASSWORD" : "Default security key active"}
-              badge={d.auth.hasAdminPassword ? "Custom" : "Default"}
+              title={a.settingsRowAdminKey}
+              detail={d.auth.hasAdminPassword ? a.settingsRowAdminKeyCustom : a.settingsRowAdminKeyDefault}
+              badge={d.auth.hasAdminPassword ? a.badgeCustom : a.badgeDefault}
               badgeTone={d.auth.hasAdminPassword ? "emerald" : "amber"}
             />
             <StatusRow
-              title="AES-256 master key (ENCRYPTION_KEY)"
+              title={a.settingsRowMasterKey}
               detail={d.encryption.note}
-              badge={d.encryption.isConfigured ? "Configured" : "Unset"}
+              badge={d.encryption.isConfigured ? a.badgeConfigured : a.badgeUnset}
               badgeTone={d.encryption.isConfigured ? "emerald" : "amber"}
             />
             <StatusRow
-              title="Session signer (AUTH_SECRET)"
-              detail="Signs customer magic links & admin tokens"
-              badge={d.auth.hasAuthSecret ? "Custom key" : "Auto derived"}
+              title={a.settingsRowSigner}
+              detail={a.settingsRowSignerDetail}
+              badge={d.auth.hasAuthSecret ? a.badgeCustomKey : a.badgeAutoDerived}
               badgeTone={d.auth.hasAuthSecret ? "emerald" : "blue"}
             />
           </CardBody>
@@ -116,23 +122,23 @@ export default async function AdminSettingsPage() {
         <Card>
           <CardHeader
             icon={<Database className="h-4 w-4" />}
-            title="Database & Infrastructure"
-            description="PostgreSQL storage & connection"
+            title={a.settingsDb}
+            description={a.settingsDbDesc}
           />
           <CardBody className="space-y-3">
             <StatusRow
-              title="Postgres connection"
+              title={a.settingsRowPostgres}
               detail={d.database.provider}
               mono
-              badge={d.database.isConfigured ? "Connected" : "Unlinked"}
+              badge={d.database.isConfigured ? a.badgeConnected : a.badgeUnlinked}
               badgeTone={d.database.isConfigured ? "emerald" : "amber"}
             />
             <StatusRow
-              title="Telegram admin alerts"
+              title={a.settingsRowTelegram}
               detail={d.alerts.status}
               icon={<Send className="h-3.5 w-3.5" />}
               badge={
-                d.alerts.hasTelegramBot && d.alerts.hasTelegramChatId ? "Active" : "Optional"
+                d.alerts.hasTelegramBot && d.alerts.hasTelegramChatId ? a.badgeActive : a.badgeOptional
               }
               badgeTone={
                 d.alerts.hasTelegramBot && d.alerts.hasTelegramChatId ? "emerald" : "neutral"
@@ -145,20 +151,26 @@ export default async function AdminSettingsPage() {
         <Card>
           <CardHeader
             icon={<CreditCard className="h-4 w-4" />}
-            title="Payment & Fulfillment Gateways"
-            description="Checkout gateways and automated supplier"
+            title={a.settingsPayments}
+            description={a.settingsPaymentsDesc}
           />
           <CardBody className="space-y-3">
             <StatusRow
-              title="Payment provider"
+              title={a.settingsRowPayment}
               detail={d.payments.provider}
-              badge={d.payments.hasBkash ? "bKash live" : d.payments.hasBinance ? "Binance live" : "Mock / sandbox"}
+              badge={
+                d.payments.hasBkash
+                  ? a.badgeBkashLive
+                  : d.payments.hasBinance
+                    ? a.badgeBinanceLive
+                    : a.badgeMockSandbox
+              }
               badgeTone={d.payments.hasBkash || d.payments.hasBinance ? "emerald" : "neutral"}
             />
             <StatusRow
-              title="Supplier provider"
+              title={a.settingsRowSupplier}
               detail={d.supplier.provider}
-              badge={d.supplier.hasProdSellerKey ? "ProdSeller API" : "Mock / manual"}
+              badge={d.supplier.hasProdSellerKey ? a.badgeProdSeller : a.badgeMockManual}
               badgeTone={d.supplier.hasProdSellerKey ? "violet" : "neutral"}
             />
           </CardBody>
@@ -168,23 +180,23 @@ export default async function AdminSettingsPage() {
         <Card>
           <CardHeader
             icon={<Building2 className="h-4 w-4" />}
-            title="Storefront info & contacts"
-            description="Public details displayed to customers"
+            title={a.settingsStore}
+            description={a.settingsStoreDesc}
           />
           <CardBody>
-            <LabelRow label="Store name" value={d.site.name} />
-            <LabelRow label="Canonical URL" value={d.site.url} mono />
-            <LabelRow label="Support WhatsApp" value={d.site.whatsapp} mono />
-            <LabelRow label="Support email" value={d.site.email} mono />
-            <LabelRow label="Operating base" value={d.site.location} />
+            <LabelRow label={a.settingsLabelStore} value={d.site.name} />
+            <LabelRow label={a.settingsLabelUrl} value={d.site.url} mono />
+            <LabelRow label={a.settingsLabelWhatsapp} value={d.site.whatsapp} mono />
+            <LabelRow label={a.settingsLabelEmail} value={d.site.email} mono />
+            <LabelRow label={a.settingsLabelBase} value={d.site.location} />
           </CardBody>
         </Card>
       </div>
 
       <div className="mt-6 flex items-center gap-2 text-xs text-faint">
-        <span>Diagnostics are read-only.</span>
+        <span>{a.settingsReadOnly}</span>
         <Link href="/admin/commands" className="inline-flex items-center gap-1 font-semibold text-accent hover:text-cyan-200">
-          View runbook for configuring keys <ArrowUpRight className="h-3 w-3" />
+          {a.settingsViewRunbook} <ArrowUpRight className="h-3 w-3" />
         </Link>
       </div>
     </AdminShell>

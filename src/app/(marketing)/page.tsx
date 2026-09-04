@@ -4,11 +4,15 @@ import { ProductCard } from "@/components/product-card";
 import { Reveal } from "@/components/reveal";
 import { CountUp } from "@/components/count-up";
 import { siteConfig } from "@/lib/site";
-
-export const revalidate = 60;
+import { getI18n } from "@/lib/i18n/server";
 
 export default async function HomePage() {
-  const products = await getActiveProducts();
+  const [products, { dict, currency }] = await Promise.all([
+    getActiveProducts(),
+    getI18n(),
+  ]);
+
+  const heroSub = dict.home.heroSub.replace("{name}", siteConfig.name);
 
   return (
     <div className="relative">
@@ -20,34 +24,33 @@ export default async function HomePage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
-            Instant digital delivery · bKash · Nagad · Binance Pay
+            {dict.home.heroBadge}
           </span>
         </Reveal>
 
         <Reveal delay={80}>
           <h1 className="font-display mx-auto mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-            Premium AI tools,{" "}
-            <span className="text-gradient text-glow-cyan">unlocked in seconds</span>
+            {dict.home.heroTitleA}{" "}
+            <span className="text-gradient text-glow-cyan">{dict.home.heroTitleB}</span>
           </h1>
         </Reveal>
 
         <Reveal delay={160}>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#8b93a7] sm:text-lg">
-            {siteConfig.name} delivers {`Gemini Advanced, ChatGPT Plus, Canva Pro, CapCut Pro`} —
-            straight to your inbox the moment you pay. Pay with bKash, Nagad or Binance Pay.
+            {heroSub}
           </p>
         </Reveal>
 
         <Reveal delay={240}>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-[#8b93a7]">
             <span className="flex items-center gap-2">
-              <Timer size={16} className="text-cyan-400" /> Delivery in ~3 seconds
+              <Timer size={16} className="text-cyan-400" /> {dict.home.trustDelivery}
             </span>
             <span className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-emerald-400" /> Replacement warranty
+              <ShieldCheck size={16} className="text-emerald-400" /> {dict.home.trustWarranty}
             </span>
             <span className="flex items-center gap-2">
-              <Wallet size={16} className="text-violet-400" /> Pay your way
+              <Wallet size={16} className="text-violet-400" /> {dict.home.trustPay}
             </span>
           </div>
         </Reveal>
@@ -55,9 +58,9 @@ export default async function HomePage() {
         <Reveal delay={300}>
           <div className="mx-auto mt-12 grid max-w-lg grid-cols-3 gap-4">
             {[
-              { value: <CountUp to={5000} suffix="+" />, label: "Orders delivered" },
-              { value: <CountUp to={98} suffix="%" />, label: "Happy customers" },
-              { value: <CountUp to={3} suffix="s" />, label: "Avg. delivery" },
+              { value: <CountUp to={5000} suffix="+" />, label: dict.home.statOrders },
+              { value: <CountUp to={98} suffix="%" />, label: dict.home.statCustomers },
+              { value: <CountUp to={3} suffix="s" />, label: dict.home.statDelivery },
             ].map((s) => (
               <div key={s.label} className="glass-card rounded-xl px-3 py-4">
                 <div className="font-display text-2xl font-extrabold text-white">
@@ -78,10 +81,10 @@ export default async function HomePage() {
           <div className="mb-8 flex items-end justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-                Instant catalog
+                {dict.home.catalogEyebrow}
               </p>
               <h2 className="font-display mt-2 text-3xl font-bold sm:text-4xl">
-                Choose your unlock
+                {dict.home.catalogTitle}
               </h2>
             </div>
             <BadgeCheck className="hidden h-8 w-8 text-emerald-400/60 sm:block" />
@@ -91,13 +94,13 @@ export default async function HomePage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product, i) => (
             <Reveal key={product.id} delay={Math.min(i * 60, 300)}>
-              <ProductCard product={product} />
+              <ProductCard product={product} dict={dict} currency={currency} />
             </Reveal>
           ))}
         </div>
 
         {products.length === 0 && (
-          <p className="text-center text-[#8b93a7]">Catalog is loading — check back soon.</p>
+          <p className="text-center text-[#8b93a7]">{dict.home.catalogEmpty}</p>
         )}
       </section>
 
@@ -106,26 +109,15 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
           <Reveal>
             <h2 className="font-display text-center text-3xl font-bold">
-              Paid. Delivered. <span className="text-gradient">Done.</span>
+              {dict.home.howTitle}{" "}
+              <span className="text-gradient">{dict.home.howTitleAccent}</span>
             </h2>
           </Reveal>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              {
-                n: "01",
-                title: "Pick & pay",
-                body: "Choose your product and check out in one step — no account needed. Email + WhatsApp is all we ask.",
-              },
-              {
-                n: "02",
-                title: "We fetch it",
-                body: "The moment payment confirms, our engine pulls your credential from the supplier network.",
-              },
-              {
-                n: "03",
-                title: "Instant reveal",
-                body: "Your key or invite link decrypts on screen with 1-click copy — and lands in your inbox too.",
-              },
+              { n: "01", title: dict.home.step1Title, body: dict.home.step1Body },
+              { n: "02", title: dict.home.step2Title, body: dict.home.step2Body },
+              { n: "03", title: dict.home.step3Title, body: dict.home.step3Body },
             ].map((s, i) => (
               <Reveal key={s.n} delay={i * 90}>
                 <div className="glass-card glass-card-hover h-full rounded-2xl p-6">

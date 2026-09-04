@@ -8,15 +8,7 @@ import { Field } from "@/components/ui/field";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-
-const STATUS_OPTIONS = [
-  { value: "PENDING", label: "PENDING (Awaiting payment)" },
-  { value: "PAID", label: "PAID (Payment verified)" },
-  { value: "PROCESSING", label: "PROCESSING (Supplier purchase)" },
-  { value: "DELIVERED", label: "DELIVERED (Credentials released)" },
-  { value: "FAILED", label: "FAILED (Payment/supplier error)" },
-  { value: "REFUNDED", label: "REFUNDED" },
-] as const;
+import { useI18n } from "@/components/locale-provider";
 
 export function ManageOrderDialog({
   order,
@@ -27,12 +19,23 @@ export function ManageOrderDialog({
   onClose: () => void;
   onSaved: (updated: AdminOrderDTO) => void;
 }) {
+  const { dict } = useI18n();
+  const a = dict.admin;
   const [status, setStatus] = useState<string>(order.status);
   const [manualCreds, setManualCreds] = useState<string>("");
   const [manualInstructions, setManualInstructions] = useState<string>("");
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const statusOptions = [
+    { value: "PENDING", label: a.manageStatusOptionPending },
+    { value: "PAID", label: a.manageStatusOptionPaid },
+    { value: "PROCESSING", label: a.manageStatusOptionProcessing },
+    { value: "DELIVERED", label: a.manageStatusOptionDelivered },
+    { value: "FAILED", label: a.manageStatusOptionFailed },
+    { value: "REFUNDED", label: a.manageStatusOptionRefunded },
+  ] as const;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +54,7 @@ export function ManageOrderDialog({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Update failed");
+      if (!res.ok) throw new Error(data.error || a.manageError);
 
       onSaved({
         ...order,
@@ -60,7 +63,7 @@ export function ManageOrderDialog({
       });
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update order");
+      setError(err instanceof Error ? err.message : a.manageError);
     } finally {
       setUpdating(false);
     }
@@ -78,7 +81,7 @@ export function ManageOrderDialog({
       onClose={onClose}
       title={
         <span>
-          Manage order{" "}
+          {a.manageDialogManage}{" "}
           <span className="font-mono text-accent">{order.orderNumber}</span>
         </span>
       }
@@ -86,18 +89,18 @@ export function ManageOrderDialog({
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {a.manageDialogCancel}
           </Button>
           <Button variant="primary" type="submit" form="manage-order-form" loading={updating}>
-            Save Changes
+            {a.manageDialogSave}
           </Button>
         </>
       }
     >
       <form id="manage-order-form" onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Order status">
+        <Field label={a.manageStatus}>
           <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-            {STATUS_OPTIONS.map((o) => (
+            {statusOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -105,40 +108,37 @@ export function ManageOrderDialog({
           </Select>
         </Field>
 
-        <Field
-          label="Manual credentials / activation key / link"
-          hint="Auto-marks as DELIVERED and encrypts at rest."
-        >
+        <Field label={a.manageManualLabel} hint={a.manageManualHint}>
           <Textarea
             rows={3}
             value={manualCreds}
             onChange={(e) => setManualCreds(e.target.value)}
-            placeholder="e.g. Email: user@domain.com | Password: SecretPassword123 or https://invite-link…"
+            placeholder={a.manageManualPlaceholder}
           />
         </Field>
 
-        <Field label="Customer instructions (optional)">
+        <Field label={a.manageInstructionsLabel}>
           <Input
             value={manualInstructions}
             onChange={(e) => setManualInstructions(e.target.value)}
-            placeholder="e.g. Log in at canva.com using these credentials."
+            placeholder={a.manageInstructionsPlaceholder}
           />
         </Field>
 
         {/* Quick copy receipt link */}
         <div className="flex items-center justify-between rounded-lg border border-line bg-panel-strong/60 px-3.5 py-2.5">
           <div className="min-w-0">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">Customer receipt</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">{a.manageReceiptUrl}</div>
             <div className="truncate font-mono text-[11px] text-faint">/order/{order.orderNumber}</div>
           </div>
           <Button variant="ghost" size="sm" onClick={copyLink}>
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied ? "Copied!" : "Copy link"}
+            {copied ? a.manageCopied : a.manageCopyLink}
           </Button>
         </div>
 
         {error && (
-          <Alert tone="danger" title="Update failed">
+          <Alert tone="danger" title={a.manageError}>
             {error}
           </Alert>
         )}

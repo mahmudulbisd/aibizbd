@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { MagicLinkForm } from "@/components/magic-link-form";
+import { getI18n } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in to your Ai Biz BD account with a passwordless email link.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return {
+    title: dict.auth.metaTitle,
+    description: dict.auth.metaDescription,
+  };
+}
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const { dict } = await getI18n();
+
   return (
     <div className="mx-auto max-w-md px-4 py-20">
       <h1 className="font-display text-center text-3xl font-bold">
-        Welcome <span className="text-gradient">back</span>
+        {dict.auth.titleA} <span className="text-gradient">{dict.auth.titleB}</span>
       </h1>
-      <p className="mt-2 text-center text-sm text-[#8b93a7]">
-        Sign in to view your orders, licenses and receipts.
-      </p>
+      <p className="mt-2 text-center text-sm text-[#8b93a7]">{dict.auth.sub}</p>
       <div className="mt-8">
         <Suspense>
           <MagicLinkForm />

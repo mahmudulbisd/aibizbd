@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Download, Printer } from "lucide-react";
+import { useI18n } from "@/components/locale-provider";
+import { formatDate } from "@/lib/format";
+import type { Locale } from "@/lib/i18n/config";
 
 /** Clean, printable invoice. "Download" renders the current DOM via print-to-PDF. */
 export function Receipt(props: {
@@ -17,14 +20,17 @@ export function Receipt(props: {
   email: string;
   brandName: string;
   supportWhatsApp: string;
+  locale: Locale;
 }) {
+  const { dict } = useI18n();
   const [downloading, setDownloading] = useState(false);
+
   const statusLabel =
     props.status === "DELIVERED"
-      ? "Paid & delivered"
+      ? dict.receipt.statusDelivered
       : props.status === "PAID" || props.status === "PROCESSING"
-        ? "Paid"
-        : props.status;
+        ? dict.receipt.statusPaid
+        : dict.status[props.status as keyof typeof dict.status] ?? props.status;
 
   function print() {
     setDownloading(true);
@@ -35,10 +41,14 @@ export function Receipt(props: {
     }, 50);
   }
 
+  const deliveredLine = dict.receipt.deliveredTo
+    .replace("{type}", props.deliveryType)
+    .replace("{email}", props.email);
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Receipt</h1>
+        <h1 className="font-display text-2xl font-bold">{dict.receipt.title}</h1>
         <div className="flex gap-2 print:hidden">
           <button
             type="button"
@@ -46,9 +56,9 @@ export function Receipt(props: {
             disabled={downloading}
             className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3.5 py-2 text-sm font-semibold text-[#aab3c5] transition hover:text-cyan-300"
           >
-            {downloading ? "Preparing…" : (
+            {downloading ? dict.receipt.preparing : (
               <>
-                <Download size={15} /> PDF
+                <Download size={15} /> {dict.receipt.pdf}
               </>
             )}
           </button>
@@ -57,7 +67,7 @@ export function Receipt(props: {
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3.5 py-2 text-sm font-semibold text-[#aab3c5] transition hover:text-cyan-300"
           >
-            <Printer size={15} /> Print
+            <Printer size={15} /> {dict.receipt.print}
           </button>
         </div>
       </div>
@@ -70,17 +80,13 @@ export function Receipt(props: {
         <div className="flex items-start justify-between border-b border-zinc-200 pb-5">
           <div>
             <p className="text-xl font-extrabold tracking-tight">{props.brandName}</p>
-            <p className="mt-1 text-xs text-zinc-500">Digital delivery receipt</p>
+            <p className="mt-1 text-xs text-zinc-500">{dict.receipt.digitalReceipt}</p>
           </div>
           <div className="text-right text-sm">
             <p className="font-mono text-xs text-zinc-500">{props.orderNumber}</p>
             <p className="mt-1 font-semibold">{statusLabel}</p>
             <p className="text-xs text-zinc-500">
-              {new Date(props.date).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
+              {formatDate(props.date, props.locale)}
             </p>
           </div>
         </div>
@@ -88,17 +94,15 @@ export function Receipt(props: {
         <table className="mt-6 w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-zinc-400">
-              <th className="pb-2 font-semibold">Item</th>
-              <th className="pb-2 text-right font-semibold">Amount</th>
+              <th className="pb-2 font-semibold">{dict.receipt.item}</th>
+              <th className="pb-2 text-right font-semibold">{dict.receipt.amount}</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-zinc-100">
               <td className="py-3">
                 <p className="font-semibold text-zinc-800">{props.productTitle}</p>
-                <p className="text-xs text-zinc-500">
-                  {props.deliveryType} · delivered to {props.email}
-                </p>
+                <p className="text-xs text-zinc-500">{deliveredLine}</p>
               </td>
               <td className="py-3 text-right font-semibold">{props.amountFormatted}</td>
             </tr>
@@ -106,7 +110,7 @@ export function Receipt(props: {
           <tfoot>
             <tr>
               <td className="py-3 text-xs uppercase tracking-wide text-zinc-400">
-                Paid via {props.paidVia}
+                {dict.receipt.paidVia.replace("{method}", props.paidVia)}
               </td>
               <td className="py-3 text-right">
                 <span className="font-display text-lg font-extrabold">{props.amountFormatted}</span>
@@ -119,9 +123,7 @@ export function Receipt(props: {
           <p>
             {props.brandName} · Bogra, Bangladesh · WhatsApp {props.supportWhatsApp}
           </p>
-          <p className="mt-1">
-            Keep this receipt for warranty claims. Questions? Reply to your delivery email.
-          </p>
+          <p className="mt-1">{dict.receipt.footerKeep}</p>
         </div>
       </div>
     </div>

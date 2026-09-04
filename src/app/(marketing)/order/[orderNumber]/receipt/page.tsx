@@ -2,27 +2,19 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getOrderByNumber } from "@/lib/orders";
 import { getCurrentUser } from "@/lib/session";
-import { formatBDT, siteConfig } from "@/lib/site";
+import { siteConfig } from "@/lib/site";
+import { getI18n } from "@/lib/i18n/server";
+import { formatMoney } from "@/lib/format";
 import { Receipt } from "@/components/receipt";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Receipt",
-  description: "Order receipt",
-};
-
-function deliveryTypeLabel(type?: string): string {
-  switch (type) {
-    case "LINK":
-      return "Invite link";
-    case "CREDENTIALS":
-      return "Credentials";
-    case "ACTIVATION_KEY":
-      return "Activation key";
-    default:
-      return "Digital delivery";
-  }
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return {
+    title: dict.receipt.metaTitle,
+    description: dict.receipt.metaDescription,
+  };
 }
 
 export default async function ReceiptPage({
@@ -33,7 +25,7 @@ export default async function ReceiptPage({
   searchParams: Promise<{ lookup?: string }>;
 }) {
   const [{ orderNumber }, { lookup }] = await Promise.all([params, searchParams]);
-  const user = await getCurrentUser();
+  const [user, { dict, locale }] = await Promise.all([getCurrentUser(), getI18n()]);
 
   // Authorize: session email matches, or the buyer's lookup secret is present.
   const order = await getOrderByNumber(orderNumber, lookup ?? undefined);
@@ -42,21 +34,26 @@ export default async function ReceiptPage({
 
   const amount = Number(order.amountPaidBdt);
   const status = order.status;
+  // Receipts are transactional records of the BDT amount actually paid.
+  const amountFormatted = formatMoney(order.amountPaidBdt, "BDT");
+  const deliveryTypeKey =
+    (order.delivery?.type as keyof typeof dict.deliveryType) ?? "CREDENTIALS";
 
   return (
     <Receipt
       orderNumber={order.orderNumber}
-      productTitle={order.productSnapshot?.title ?? "Digital product"}
+      productTitle={order.productSnapshot?.title ?? dict.common.digitalDelivery}
       description={order.productSnapshot?.slug ?? ""}
-      deliveryType={deliveryTypeLabel(order.delivery?.type)}
+      deliveryType={dict.deliveryType[deliveryTypeKey] ?? dict.common.digitalDelivery}
       amountBdt={amount}
-      amountFormatted={formatBDT(order.amountPaidBdt)}
-      paidVia={order.paymentMethod.replace("_", " ")}
+      amountFormatted={amountFormatted}
+      paidVia={dict.payment[order.paymentMethod as keyof typeof dict.payment] ?? order.paymentMethod}
       status={status}
       date={order.createdAt}
       email={order.customerEmail}
       brandName={siteConfig.name}
       supportWhatsApp={siteConfig.supportWhatsApp}
+      locale={locale}
     />
   );
 }
