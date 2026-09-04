@@ -1,9 +1,22 @@
+function resolveSiteUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (envUrl && envUrl.length > 0) {
+    return envUrl.startsWith("http://") || envUrl.startsWith("https://")
+      ? envUrl
+      : `https://${envUrl}`;
+  }
+  if (process.env.VERCEL_URL?.trim()) {
+    return `https://${process.env.VERCEL_URL.trim()}`;
+  }
+  return "https://aibizbd.com";
+}
+
 export const siteConfig = {
   name: "Ai Biz BD",
   tagline: "Premium AI & Digital Tools — Instant Delivery",
   description:
     "Premium AI tools and digital subscriptions — Gemini Advanced, ChatGPT Plus, Canva Pro, CapCut Pro and more — delivered instantly in Bangladesh. Pay with bKash, Nagad or Binance Pay.",
-  url: process.env.NEXT_PUBLIC_APP_URL ?? "https://aibizbd.com",
+  url: resolveSiteUrl(),
   contactEmail: "aibizbd@gmail.com",
   supportWhatsApp: "+8801735993166",
   whatsappLink: "https://wa.me/8801735993166",

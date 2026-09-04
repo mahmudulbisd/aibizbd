@@ -20,8 +20,16 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "700"],
 });
 
+const safeMetadataBase = (() => {
+  try {
+    return new URL(siteConfig.url);
+  } catch {
+    return new URL("https://aibizbd.com");
+  }
+})();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  metadataBase: safeMetadataBase,
   title: {
     default: `${siteConfig.name} — ${siteConfig.tagline}`,
     template: `%s — ${siteConfig.name}`,
