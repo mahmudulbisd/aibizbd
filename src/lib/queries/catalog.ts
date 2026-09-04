@@ -1,7 +1,5 @@
 import "server-only";
-import { db, dbHealthy } from "@/db";
-import { products } from "@/db/schema";
-import { catalog, type CatalogProduct } from "@/db/catalog";
+import { getActiveProducts } from "@/lib/products";
 
 export interface AdminCatalogItem {
   id: string;
@@ -19,8 +17,6 @@ export interface AdminCatalogItem {
   isActive: boolean;
   createdAt: Date;
 }
-
-import { getActiveProducts } from "@/lib/products";
 
 export async function getAdminCatalog(): Promise<AdminCatalogItem[]> {
   const live = await getActiveProducts();

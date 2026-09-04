@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableContainer, Table, THead, TH, TBody, TR, TD, EmptyRow } from "@/components/ui/table";
 import { formatBDT } from "@/lib/site";
+import { grossMarginPct } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Products — Ai Biz BD Admin",
@@ -67,7 +68,7 @@ export default async function AdminProductsPage() {
                   const priceUsd = Number(p.priceUsd ?? 0);
                   const costUsd = Number(p.wholesaleCostUsd ?? 0);
                   const profitUsd = priceUsd - costUsd;
-                  const marginPct = priceUsd > 0 ? Math.round((profitUsd / priceUsd) * 100) : 0;
+                  const marginPct = grossMarginPct(priceUsd, costUsd);
 
                   return (
                     <TR key={p.slug}>

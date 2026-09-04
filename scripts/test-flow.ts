@@ -17,6 +17,7 @@ import { getProductBySlug, getActiveProducts } from "../src/lib/products";
 import { createOrder, getOrderByNumber, transitionOrder } from "../src/lib/orders";
 import { fulfillOrder } from "../src/lib/fulfillment";
 import { decryptSecret } from "../src/lib/crypto";
+import { retailPriceBdt, retailPriceUsd } from "../src/lib/pricing";
 
 async function applyMigration(client: PGlite) {
   const sql = fs.readFileSync(
@@ -35,8 +36,9 @@ async function seedProduct(client: PGlite) {
     title: "Gemini Pro — 18 Months",
     description: "Integration test product",
     features: ["Gemini Advanced access", "5TB storage"],
-    priceBdt: "790",
-    priceUsd: "6.6",
+    // Mirrors the uniform 70%-margin pricing policy (see src/lib/pricing.ts).
+    priceBdt: String(retailPriceBdt(1.1)),
+    priceUsd: String(retailPriceUsd(1.1)),
     wholesaleCostUsd: "1.1",
     providerType: "TELEGRAM_BOT_API",
     externalProviderId: "6a31035939dc014325da2c66",
@@ -86,7 +88,7 @@ async function main() {
     assert(order.orderNumber.startsWith("AIBIZ-"), "order number generated");
     assert(order.status === "PENDING", "order starts PENDING");
     assert(order.lookupSecret && order.lookupSecret.length > 10, "lookup secret generated");
-    assert(Number(order.amountPaidBdt) === 790, "amount stored from product");
+    assert(Number(order.amountPaidBdt) === retailPriceBdt(1.1), "amount stored from product");
 
     // 3. Payment webhook effect: transition to PAID + record tx.
     const paid = await transitionOrder(order.orderNumber, ["PENDING"], "PAID", {

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { cache } from "react";
 import type { Product } from "@/db/schema";
 import { catalog } from "@/db/catalog";
+import { retailPriceBdt, retailPriceUsd } from "@/lib/pricing";
 
 interface ProdSellerRawProduct {
   id: string;
@@ -81,11 +82,11 @@ async function fetchLiveSupplierProducts(): Promise<Product[] | null> {
       const curated = catalog.find((c) => c.externalProviderId === p.id);
 
       const wholesaleCost = p.price;
-      // Convert wholesale USD to BDT (~৳125/$) with ~45-50% markup, rounded to 10 BDT
-      const computedBdt = Math.max(
-        Math.ceil((wholesaleCost * 125 * 1.5) / 10) * 10,
-        150,
-      );
+
+      // Curated catalog entries keep their listed BDT retail price.
+      // Unknown/new live products get the uniform 70% margin price so every
+      // product on the storefront follows the same retail rule.
+      const computedBdt = retailPriceBdt(wholesaleCost);
 
       const title = curated ? curated.title : p.name.trim();
       const slug = curated ? curated.slug : slugify(p.name);
@@ -121,7 +122,7 @@ async function fetchLiveSupplierProducts(): Promise<Product[] | null> {
         description: desc,
         features,
         priceBdt: curated ? curated.priceBdt : String(computedBdt),
-        priceUsd: String((wholesaleCost * 1.5).toFixed(2)),
+        priceUsd: curated ? curated.priceUsd : String(retailPriceUsd(wholesaleCost).toFixed(2)),
         wholesaleCostUsd: String(wholesaleCost),
         providerType: "TELEGRAM_BOT_API",
         externalProviderId: p.id,

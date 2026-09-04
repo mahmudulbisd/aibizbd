@@ -11,7 +11,7 @@ interface CommandCardProps {
   category: "DATABASE" | "SECURITY" | "TESTING" | "SUPPLIER" | "VERCEL";
   badgeColor?: "cyan" | "emerald" | "purple" | "amber";
   description: string;
-  banglaInstruction?: string;
+  instruction?: string;
   command: string;
   outputHint?: string;
 }
@@ -28,7 +28,7 @@ export function CommandCard({
   category,
   badgeColor = "cyan",
   description,
-  banglaInstruction,
+  instruction,
   command,
   outputHint,
 }: CommandCardProps) {
@@ -47,9 +47,9 @@ export function CommandCard({
         <h3 className="mt-3 text-sm font-bold tracking-tight text-ink">{title}</h3>
         <p className="mt-1 text-xs leading-relaxed text-subtle">{description}</p>
 
-        {banglaInstruction && (
+        {instruction && (
           <div className="mt-2.5 rounded-lg border border-accent/20 bg-accent/[0.04] px-3 py-2 text-[11px] leading-relaxed text-cyan-200/90">
-            <strong>নির্দেশনা:</strong> {banglaInstruction}
+            <strong>Note:</strong> {instruction}
           </div>
         )}
 
